@@ -1,0 +1,79 @@
+Goals
+=====
+Lightweight
+Functional programming style
+Readable
+
+Ideas
+=====
+Default Attrs for Tags
+~|(a:target=doc-iframe)|~
+  ~| Button1 ~li>a|~
+~||~
+
+Zen HTML Tags in the Element Part
+~| Button1 ~button
+
+Tag Memory
+~| Button1 ~button.btn |~
+~| Button2 |~
+~| Button3 |~
+
+Variables
+~| Hi {$name}! ~.info|~
+
+Wrapping Blocks
+$v if array
+$k, $v if object
+$i is the # of iteration
+$first is true on first
+$last is true on last
+
+~|$object k v ( $k li>a.btn|href:$v ) |~
+
+Extra
+=====
+@ = alias
+
+Tag relationships
+=================
+Possibly attributes to apply to decendents
+like all list#button-list decendants of type button have class btn
+topbar > ul = button#btn
+
+Default Attributes
+==================
+a = <a href=""></a>
+
+Aliases
+=======
+Turn .topbar > .topbar-inner > .container-fluid into @topbar
+
+Sed
+===
+Apply regex line by line
+
+Auto-wrap
+=========
+Applies smack.Sed and wraps each line, excluding pre/post whitespace, in smack tag
+
+"Packs"
+=======
+Packs of aliases / possibly other features packaged into little plugins for specific CSS frameworks
+
+<!-- Block Klasses -->
+<!-- ============= -->
+<!-- Define a set of attributes to apply like -->
+<!-- ~|&+ invisible~ width:0 height:0 |~ -->
+
+Functionalisms (Ruby style Blocks with globals)
+Filter = %
+Map = #
+Reduce = >>
+==============
+$events |% $$.date > 'June 6th' |# (k, v) "Day #{k}: #{v}" |#wrap('')
+
+Variable Automatic Behavior
+===========================
+* index="index" w/ regex transform
+* string OR '' (like var ? other_var)
