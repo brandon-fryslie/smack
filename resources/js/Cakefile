@@ -1,0 +1,87 @@
+CoffeeScript  = require('./lib/coffee-script')
+fs            = require 'fs'
+path          = require 'path'
+{spawn, exec} = require 'child_process'
+
+{extend}      = require './lib/smack/Helper'
+# Smack         = require './src/Smack'
+
+
+# Smack ?= { VERSION: '0.0.1' }
+
+# ANSI Terminal Colors.
+bold  = '\033[0;1m'
+red   = '\033[0;31m'
+green = '\033[0;32m'
+reset = '\033[0m'
+
+Smack = { VERSION: '000'}
+
+# Built file header.
+header = """
+  /**
+   * Smack Compiler v#{Smack.VERSION}
+   *
+   * Copyright 2011, Brandon Fryslie
+   * Released under the MIT License
+   */
+"""
+
+sources = [
+  'Smack', 'AST', 'Lexer', 'Helper', 'Grammar', 'Browser', 'CLI', 'Optparse'
+].map (filename) -> "src/#{filename}.coffee"
+
+# Run a Smack through our node/coffee interpreter.
+run = (args, cb) ->
+  proc =         spawn 'coffee', args
+  proc.stderr.on 'data', (buffer) -> console.log buffer.toString()
+  proc.on        'exit', (status) ->
+    process.exit(1) if status != 0
+    cb() if typeof cb is 'function'
+
+# Log a message with a color.
+log = (message, color, explanation) ->
+  console.log color + message + reset + ' ' + (explanation or '')
+
+task 'build', 'build the CoffeeScript language from source', build = (cb) ->
+  run ['-c', '-o', 'lib/smack'].concat(sources), cb
+
+task 'build:parser', 'rebuild the Jison parser (run build first)', ->
+  extend global, require('util')
+  require 'jison'
+  parser = require('./lib/smack/Grammar').parser
+  fs.writeFile 'lib/smack/Parser.js', parser.generate()
+
+task 'build:browser', 'rebuild the merged script for inclusion in the browser', ->
+    
+  code = ''
+  for name in ['Helper', 'Lexer', 'Parser', 'AST', 'Smack', 'Browser']
+    code += """
+      require['./#{name}'] = new function() {
+        var exports = this;
+        #{fs.readFileSync "lib/smack/#{name}.js"}
+      };
+    """
+  code = """
+    this.Smack = function() {
+      function require(path){ return require[path]; }
+      #{code}
+      return require['./Smack']
+    }()
+  """
+  # unless process.env.MINIFY is 'false'
+  #   {parser, uglify} = require 'uglify-js'
+  #   code = uglify.gen_code uglify.ast_squeeze uglify.ast_mangle parser.parse code
+  
+  exec 'rm -f SmackCompiler.js', (error, stdout, stderr)->
+    console.log error if error?
+    console.log 'Deleted SmackCompiler.js...'
+    fs.writeFile 'SmackCompiler.js', header + '\n' + code, ->
+      console.log "built smack for browser"
+    
+  
+
+task 'ball', 'build everything', build = (cb) ->
+  invoke 'build'
+  invoke 'build:parser'
+  invoke 'build:browser'

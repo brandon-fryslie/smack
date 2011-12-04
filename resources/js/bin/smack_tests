@@ -2,4 +2,4 @@
 
 require('coffee-script');
 
-require('../SmackTests').runTests()
+require('../Tests').runTests()

@@ -9,19 +9,16 @@
     }
 
     OptionParser.prototype.parse = function(args) {
-      var arg, i, isOption, matchedRule, options, originalArgs, pos, rule, value, _i, _len, _len2, _ref;
+      var arg, i, isOption, matchedRule, options, rule, value, _i, _len, _len2, _ref;
       options = {
         arguments: [],
         literals: []
       };
-      originalArgs = args;
       args = normalizeArguments(args);
       for (i = 0, _len = args.length; i < _len; i++) {
         arg = args[i];
         if (arg === '--') {
-          pos = originalArgs.indexOf('--');
-          options.arguments = [originalArgs[1 + pos]];
-          options.literals = originalArgs.slice(2 + pos);
+          options.literals = args.slice(i + 1);
           break;
         }
         isOption = !!(arg.match(LONG_FLAG) || arg.match(SHORT_FLAG));
@@ -40,7 +37,7 @@
           throw new Error("unrecognized option: " + arg);
         }
         if (!isOption) {
-          options.arguments = originalArgs.slice(originalArgs.indexOf(arg));
+          options.arguments = args.slice(i);
           break;
         }
       }

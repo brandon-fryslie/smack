@@ -77,3 +77,39 @@ Variable Automatic Behavior
 ===========================
 * index="index" w/ regex transform
 * string OR '' (like var ? other_var)
+
+Variables
+=========
+* Syntax ${var:-default}
+* Changable values trigger in default
+* 
+
+Tag operators
+=============
+Sed
+~|s/(\w+)/\U$1> p~ Error:$error |~
+~| Error:$error ~p s/(\w+)/\U$1|~
+
+Wrap
+<li><a href="resources/docs/2_HPC.html" target="doc-iframe">HPC</a></li>
+
+
+~|[li>a(+)doc-iframe] #{object <href,btn_text> }> ul.dropdown-menu~
+  btn_text |href: href|
+|~
+
+turns into something like
+
+<ul class="dropdown-menu">
+  <li><a href="resources/docs/1_gene_annotation.html" target="doc-iframe">Gene Annotation</a></li>
+  <li><a href="resources/docs/2_HPC.html" target="doc-iframe">HPC</a></li>
+  <li><a href="resources/docs/3_Blast.html" target="doc-iframe">Blast</a></li>
+</ul>
+
+Loops
+=====
+Loop block
+~|
+
+
+

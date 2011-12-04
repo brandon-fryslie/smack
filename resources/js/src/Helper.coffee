@@ -1,4 +1,8 @@
-
+# Extend a source object with the properties of another object (shallow copy).
+exports.extend = (object, properties) ->
+  for key, val of properties
+    object[key] = val
+  object
 
 exports._h =
   escape_html: (s) -> s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')

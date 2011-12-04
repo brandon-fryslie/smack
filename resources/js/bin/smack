@@ -2,4 +2,4 @@
 
 require('coffee-script');
 
-require('../SmackCLI').run();
+require('../lib/smack/CLI').run();
