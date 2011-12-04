@@ -28,7 +28,7 @@ grammar =
   
   Body: [
     o 'Expression', -> new Body [$1]
-    o 'Body Expression', -> $1.push $2
+    o 'Body Expression', -> $1.push $2; $1
   ]
     
   Expression: [

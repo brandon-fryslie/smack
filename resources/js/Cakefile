@@ -43,7 +43,7 @@ run = (args, cb) ->
 log = (message, color, explanation) ->
   console.log color + message + reset + ' ' + (explanation or '')
 
-task 'build', 'build the CoffeeScript language from source', build = (cb) ->
+task 'build:smack', 'build the CoffeeScript language from source', build = (cb) ->
   run ['-c', '-o', 'lib/smack'].concat(sources), cb
 
 task 'build:parser', 'rebuild the Jison parser (run build first)', ->
@@ -73,15 +73,5 @@ task 'build:browser', 'rebuild the merged script for inclusion in the browser', 
   #   {parser, uglify} = require 'uglify-js'
   #   code = uglify.gen_code uglify.ast_squeeze uglify.ast_mangle parser.parse code
   
-  exec 'rm -f SmackCompiler.js', (error, stdout, stderr)->
-    console.log error if error?
-    console.log 'Deleted SmackCompiler.js...'
-    fs.writeFile 'SmackCompiler.js', header + '\n' + code, ->
-      console.log "built smack for browser"
-    
-  
-
-task 'ball', 'build everything', build = (cb) ->
-  invoke 'build'
-  invoke 'build:parser'
-  invoke 'build:browser'
+  fs.writeFile 'SmackCompiler.js', header + '\n' + code, ->
+    console.log "built smack for browser"  

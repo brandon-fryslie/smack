@@ -27,26 +27,14 @@ exports.Lexer = class Lexer
     LITERAL: 0
     
   tokenize: (code) ->
-    
-    console.log "tokenizing code: #{code}" if @TEST?.MAIN
-    
+        
     @code = code.replace(/\r/g, '')
     @line = 0
     @tokens = []
 
     i = 0
     while @chunk = @code.slice i
-      
-      console.log "main@in_config(): #{@in_config()}" if @TEST?.MAIN
 
-      open_tag_idx = (token, i) ->
-        if token[0] == 'OPENTAG' then return i else token
-
-      @for_tokens ->
-        open_tag_idx
-
-      console.log @chunk if @TEST?.MAIN
-      
       i +=  @OpenTag() or
             @SmackOperator() or
             @Midtag() or
@@ -58,37 +46,8 @@ exports.Lexer = class Lexer
             @Literal() or
             @Whitespace() or
             @LexerError()
-                    
-    @closeTags()
-    
+                        
     return @tokens
-
-  closeTags: ->
-    '</div>'
-
-  # Runs a fn over the tokens backward
-  for_tokens: (fn) ->
-    console.log '@for_tokens:' if @TEST?.FOR_TOKENS
-    console.log @tokens if @TEST?.FOR_TOKENS
-    store = null
-    res = null
-    i = @tokens.length
-    while i--
-      return res if res?
-      do (i, store) =>
-        [tag, value] = token = @tokens[i]
-        v = fn(arguments)
-        if v?.length > 0 and v?[0] is 'return' then return (if v.length > 1 then v[1] else v[1..])
-
-  
-  # # Are we in a smack tag?
-  # in_tag: ->
-  #   for i in [@tokens.length-1..0] when @tokens.length
-  #     if @tokens[i][0] is 'OPENTAG'
-  #       return true
-  #     if @tokens[i][0] is 'CLOSETAG'
-  #       return false
-  #   return false
 
   # True if the last tag is a reverse tag like ~| Hi! ~p |~
   is_reverse: -> @last_operator is ' '
@@ -117,10 +76,7 @@ exports.Lexer = class Lexer
     "chunk": @chunk
 
   OpenTag: ->
-    console.log 'Opentag w/ chunk:'+@chunk if @TEST?.OPENTAG
-    console.log 'Opentag RE:'+OpenTagRE if @TEST?.OPENTAG
     return 0 unless match = OpenTagRE.exec @chunk
-    console.log 'Opentag matched' if @TEST?.OPENTAG
     [match, tag] = match
     @tokens.push [ 'OPENTAG', tag ]
     @in_tag = yes
@@ -177,8 +133,6 @@ exports.Lexer = class Lexer
     
     @tokens.push [ 'ATTR_LIST_OPEN', match[1] ]
     
-    # console.log 'match'
-    # console.log match
     for attr in match[2].split ','
       [key, value] = attr.split /:\s/
       @tokens.push ['ATTRIBUTE', { key, value }]
@@ -247,13 +201,11 @@ exports.Lexer = class Lexer
     @tokens.push [ 'TOKEN', tok ]
     tok.length
 
-
 Element  = /^[a-zA-Z][a-zA-Z0-9]*/
 AttrAbbr = ///^([#.]+)([a-zA-Z][a-zA-Z0-9\-_]*)///
 AttrKey  = /^[a-zA-Z][a-zA-Z0-9\-_]*/
 AttrVal  = /^[a-zA-Z_ ][\-a-zA-Z0-9_ .]*/
 AttrList = /^(\|)([\s\S]*?)(\|)/
-
 
 Whitespace = /^\s+/
 

@@ -33,16 +33,16 @@ exports.Node = class Node
 exports.Body = class Body extends Node
     
   compile: ->
-    (n.compile() for n in @nodes).join('')
+    (n.compile() for n in @nodes).join ''
     
 exports.SmackBlock = class SmackBlock extends Node
        
-  constructor: (@front_op, @zentag, @literal, @rear_op) ->
+  constructor: (@front_op, @zentag, @content, @rear_op) ->
            
   compile: ->
-    [head, foot, indent] = @zentag.compile()
+    [head, foot ] = @zentag.compile()
 
-    "#{head}#{indent}#{@literal}#{'\n' if indent isnt ''}#{foot}"
+    "#{head}#{@content}#{foot}"
    
 exports.ZenTag = class ZenTag extends Node
   
@@ -55,28 +55,22 @@ exports.ZenTag = class ZenTag extends Node
   compile: ->
     tag_stack = []
     tag_c_stack = []
-    lvl = 0 # Set to -1 to turn off indenting
-    should_indent = lvl isnt -1
     for { op, tag } in @tags
-      tag_c_stack.push if should_indent then _h.indent(lvl)+tag.compile()+'\n' else tag.compile()
+      tag_c_stack.push tag.compile()
       switch op
         when '>'
           tag_stack.push tag.el
-          lvl++
         when '+'
           tag_stack.splice -1, 0, tag.el
     
-    # indent level for stuff in the block
-    content_lvl = lvl+1
-    head = tag_c_stack.join('')
+    head = tag_c_stack.join ''
         
-    close_tags = while t = tag_stack.pop() when t not in SINGLETONS
-      '</'+t+'>' unless should_indent
-      _h.indent(--lvl)+"</#{t}>\n"
+    close_tags = ('</'+t+'>' while t = tag_stack.pop() when t not in SINGLETONS)
+      
         
     foot = close_tags.join('')
     
-    [ head, foot, if should_indent then _h.indent(content_lvl) else '' ]
+    [ head, foot ]
       
    
 exports.HtmlTag = class HtmlTag extends Node
@@ -95,10 +89,9 @@ exports.HtmlTag = class HtmlTag extends Node
       else
         attrs[key] = value
     
-    id_class_s = _h.join (' '+k+'="'+v+'"' for k, v of attrs when k is 'id' or k is 'class')
-    attr_s     = _h.join (' '+k+'="'+v+'"' for k, v of attrs when k isnt 'id' and k isnt 'class')
+    id_class_s = (' '+k+'="'+v+'"' for k, v of attrs when k is 'id' or k is 'class').join ''
+    attr_s     = (' '+k+'="'+v+'"' for k, v of attrs when k isnt 'id' and k isnt 'class').join ''
     
-    "<#{@el}>" unless attrs?
     "<#{@el}#{id_class_s}#{attr_s}>"
     
 exports.Literal = class Literal extends Node

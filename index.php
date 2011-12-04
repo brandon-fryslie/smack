@@ -59,10 +59,6 @@ $tpl = <<<HTML
       border: 1px solid #CCC;
       background-color: #FFF;
     }
-    .smack_output p
-    {
-      display:none;
-    }
     #error
     {
       width: 400;
@@ -100,8 +96,11 @@ $tpl = <<<HTML
 
   <div class="content">
     <div class="page-header">
+      
       <h1>Smack</h1>
-      <h1><small>cuz life's too short to be writing HTML</small></h1>
+      <script type="text/smack">
+        ~| cuz life is too short to be writing HTML ~h1 > small |~
+      </script>
     </div>
     <div class="row">
       <div class="span8">
