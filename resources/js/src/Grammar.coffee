@@ -1,80 +1,35 @@
 
-{Parser} = require('jison')
+{Parser} = require 'jison'
 
-unwrap = /^function\s*\(\)\s*\{\s*return\s*([\s\S]*);\s*\}/
-
-# Our handy DSL for Jison grammar generation, thanks to
-# [Tim Caswell](http://github.com/creationix). For every rule in the grammar,
-# we pass the pattern-defining string, the action to run, and extra options,
-# optionally. If no action is specified, we simply pass the value of the
-# previous nonterminal.
-# 
-# Talk about a feature packed couple of lines.  This converts all rhs functions into strings
-# then does some regex magic on them to get them into Jison form
-o = (patternString, action, options) ->
-  patternString = patternString.replace /\s{2,}/g, ' '
-  return [patternString, '$$ = $1;', options] unless action
-  action = if match = unwrap.exec action then match[1] else "(#{action}())"
-  action = action.replace /\bnew /g, '$&yy.'
-  action = action.replace /\b(?:Block\.wrap|extend)\b/g, 'yy.$&'
-  [patternString, "$$ = #{action};", options]
+{unwrap, jison_dsl: o} = require './Helper'
 
 grammar =
   
   Root: [
-    o '', -> new Body
+    o '', -> new Body ''
     o 'Body'
   ]
   
   Body: [
-    o 'Expression', -> new Body [$1]
-    o 'Body Expression', -> $1.push $2; $1
+    o 'Smaxpression', -> new Body [$1]
+    o 'Body Smaxpression', -> $1.push $2
   ]
     
-  Expression: [
+  Smaxpression: [
     o 'SmackBlock'
+    o 'LITERAL', -> new Literal $1
   ]
   
   SmackBlock: [
-    o 'OPENTAG SMACK_OPERATOR SmackTagConfig MIDTAG LITERAL SMACK_OPERATOR CLOSETAG', ->
-        new SmackBlock $2, $3, $5, $6
-    o 'OPENTAG SMACK_OPERATOR LITERAL MIDTAG SmackTagConfig SMACK_OPERATOR CLOSETAG', ->
-        new SmackBlock $2, $5, $3, $6
+    o 'OPENTAG SMACK_OPERATOR ZENTAG MIDTAG LITERAL SMACK_OPERATOR CLOSETAG', ->
+        new SmackBlock $2, new ZenTag($3), new Literal($5), $6
+    o 'OPENTAG SMACK_OPERATOR LITERAL MIDTAG ZENTAG SMACK_OPERATOR CLOSETAG', ->
+        new SmackBlock $2, new ZenTag($5), new Literal($3), $6
+    o 'OPENTAG SMACK_OPERATOR ZENTAG SMACK_OPERATOR CLOSETAG', ->
+        new SmackBlock $2, new ZenTag($3), new Literal(''), $4
   ]
   
-  SmackTagConfig: [
-    o 'ZenTag'
-  ]
   
-  ZenTag: [
-    o 'HtmlTag', -> new ZenTag $1
-    o 'ZenTag ZEN_OPERATOR HtmlTag', -> $1.tags.push {op: $2, tag: $3}; $1
-  ]
-
-  HtmlTag: [
-    o 'ELEMENT AbbreviatedAttributeList AttributeList', -> new HtmlTag($1, $2, $3)
-  ]
-
-  AbbreviatedAttributeList: [
-    o '', -> []
-    o 'AbbreviatedAttributes', -> $1
-  ]
-  
-  AbbreviatedAttributes: [
-    o 'ABBREVIATED_ATTRIBUTE', -> [$1]
-    o 'AbbreviatedAttributes ABBREVIATED_ATTRIBUTE', -> $1.concat $2
-  ]
-  
-  AttributeList: [
-    o '', -> []
-    o 'ATTR_LIST_OPEN Attributes ATTR_LIST_CLOSE', -> $2
-  ]
-  
-  Attributes: [
-    o 'ATTRIBUTE', -> [$1]
-    o 'Attributes ATTRIBUTE', -> $1.concat $2
-  ]
-
 operators = []
 
 # Wrapping Up

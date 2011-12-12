@@ -22,4 +22,4 @@ lectura:
 	coffee -c scripts.coffee
 
 upload:
-	scp SmackCompiler.js bmf@lectura.cs.arizona.edu:/home/bmf/public_html/smack/resources/js/
+	scp SmackCompiler.js ../../index.php scripts.js bmf@lectura.cs.arizona.edu:/home/bmf/public_html/smack/resources/js/

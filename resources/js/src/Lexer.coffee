@@ -1,23 +1,8 @@
 
-# Smack Tag
-#
-# Simple Edition
-#
-# ~|> p#status.block-message~ Upload Successful! |~
-# ~| Upload Successful! ~p#status.block-message |~
-#
-# ~|>
-#   p#status.block-message |alt: Bla Bla Bla| > div.clear-fix
-# ~
-#   Upload Successful!
-# |~
-#
-# ~| Upload Successful! ~p#status.block-message |alt: Bla Bla Bla| > div.clear-fix |~
-#
-
+{peek, trim} = require './Helper'
 
 exports.Lexer = class Lexer
-    
+  
   TEST:
     MAIN: 0
     OPENTAG: 0
@@ -31,33 +16,19 @@ exports.Lexer = class Lexer
     @code = code.replace(/\r/g, '')
     @line = 0
     @tokens = []
-
+    @configuration_stack = []
+    
     i = 0
     while @chunk = @code.slice i
 
       i +=  @OpenTag() or
-            @SmackOperator() or
             @Midtag() or
             @CloseTag() or
-            @Element() or
-            @AttributeAbbreviation() or
-            @AttributeList() or
-            @ZenOperator() or
+            @ZenTag() or
             @Literal() or
             @Whitespace() or
             @LexerError()
-                        
     return @tokens
-
-  # True if the last tag is a reverse tag like ~| Hi! ~p |~
-  is_reverse: -> @last_operator is ' '
-  
-  # True if we are currently in a tag
-  in_tag: no
-  
-  # True if we are in the config section
-  _in_config: no
-  in_config: -> @in_tag and @_in_config
   
   last: (array, back) ->
     array[array.length - (back or 0) - 1]
@@ -68,116 +39,106 @@ exports.Lexer = class Lexer
   value: (index, val) ->
     (tok = @last @tokens, index) and if val then tok[1] = val else tok[1]
 
+  type: ->
+    peek(@configuration_stack)?.type
+
   check_status: ->
-    "In tag?": @in_tag
-    "In tag config": @in_config()
-    "reverse?" : @is_reverse()
-    "tag()": @tag()
-    "chunk": @chunk
+    "Type"  : @type()
+    "chunk" : @chunk
 
   OpenTag: ->
     return 0 unless match = OpenTagRE.exec @chunk
-    [match, tag] = match
+    [match, tag, op] = match
+        
     @tokens.push [ 'OPENTAG', tag ]
-    @in_tag = yes
-    @_in_config = yes
+    
+    @tokens.push [ 'SMACK_OPERATOR', op ]
+    
+    throw 'Lexer: Missing Smack Operator (Open)' if @tag() isnt 'SMACK_OPERATOR'
+    
+    if @value() isnt ' '
+      type = 'REGULAR'
+    else if (CloseTagTest.exec(@chunk)?.index ? @chunk.length) < (MidtagTest.exec(@chunk)?.index ? @chunk.length)
+      type = 'EMPTY'
+    else
+      type = 'REVERSE'
+    
+    @configuration_stack.push type: type
+    
     match.length
   
-  SmackOperator: ->
-    return 0 unless @tag() and @tag() is 'OPENTAG' and
-      match = SmackOperatorRE.exec(@chunk)
-          
-    @tokens.push [ 'SMACK_OPERATOR', match[0] ]
-    
-    @last_operator = match[0]
-    
-    @_in_config = match[0] isnt ' '
-        
-    match[0].length
-  
   Midtag: ->
-    return 0 unless @in_tag and
-      match = MidtagRE.exec(@chunk)
+    return 0 unless match = MidtagRE.exec(@chunk)
     [match, tag] = match
     @tokens.push [ 'MIDTAG', tag ]
-    @_in_config =  !@in_config()
     match.length
   
   CloseTag: ->
-    return 0 unless @in_tag and (@tag() is 'LITERAL' or @in_config()) and
-      match = CloseTagRE.exec(@chunk)
+    return 0 unless match = CloseTagRE.exec(@chunk)
       
     [match, op, tag] = match
     
     @tokens.push [ 'SMACK_OPERATOR', op ]
+      
     @tokens.push [ 'CLOSETAG', tag ]
-    @in_tag = no
-    @_in_config = no
+    
     match.length
   
-  Element: ->
-    return 0 unless @in_config() and
-      match = Element.exec(@chunk)
-    [match, tag, op] = match
-    @tokens.push [ 'ELEMENT', match ]
-    match.length
-  
-  AttributeAbbreviation: ->
-    return 0 unless @in_config() and match = AttrAbbr.exec @chunk
-    [match, key, value] = match
-    @tokens.push [ 'ABBREVIATED_ATTRIBUTE', { key, value } ]
-    match.length
-  
-  AttributeList: ->
-    return 0 unless @in_config() and match = AttrList.exec @chunk
-    
-    @tokens.push [ 'ATTR_LIST_OPEN', match[1] ]
-    
-    for attr in match[2].split ','
-      [key, value] = attr.split /:\s/
-      @tokens.push ['ATTRIBUTE', { key, value }]
-    
-    @tokens.push [ 'ATTR_LIST_CLOSE', match[3] ]
-    
-    match[0].length
-    
-  ZenOperator: ->
-    return 0 unless match = ZenOperator.exec @chunk
-    [match, tag, op] = match
-    console.log 'zenop' if @TEST?.ZENOP
-    @tokens.push [ 'ZEN_OPERATOR', match ]
-    match.length
-    
   SmackVariable: ->
     return 0 unless match = SmackVariableRE.exec @chunk
     [match, tag, op] = match
     console.log 'smackvar' if @TEST?.SMACKVAR
     @tokens.push [ 'SMACK_VARIABLE', match ]
-    match.length
+    match.length    
+  
+  ZenTag: ->
+    return 0 if @configuration_stack.length is 0
+    return 0 if @type() is 'REGULAR' and @tag() isnt 'SMACK_OPERATOR'
+    return 0 if @type() is 'REVERSE' and @tag() isnt 'MIDTAG'
     
-  SmackAlias: ->
-    return 0 unless match = SmackAliasRE.exec @chunk
-    [match, tag, op] = match
-    console.log 'alias' if @TEST?.SMACKALIAS
-    @tokens.push [ 'SMACK_ALIAS', match ]
-    match.length
+    if @type() is 'REGULAR' and @tag() is 'SMACK_OPERATOR'
+      close_idx = MidtagTest.exec(@chunk)?.index
+    else if @type() is 'REVERSE' and @tag() is 'MIDTAG'
+      close_idx = CloseTagTest.exec(@chunk)?.index
+    else if @type() is 'EMPTY' and @tag() is 'SMACK_OPERATOR'
+      close_idx = CloseTagTest.exec(@chunk)?.index
+      
+    throw "No closing MIDTAG or CLOSE_TAG for ZENTAG" unless close_idx?
+    
+    zentag = @chunk[0...close_idx]
+    
+    @tokens.push [ 'ZENTAG', trim(zentag) ]
+    close_idx
   
   # Literal text
   # Any characters not in a smack tag or variable
   Literal: ->
-    return 0 if @in_config() or @tag() is 'LITERAL'
     
-    # Implement recursion here
-    open_idx = OpenTagTest.exec(@chunk)?.index ? @chunk.length
+    # If we aren't in a tag, it is a literal for sure
+    return if @configuration_stack.length is 0
+      open_idx = OpenTagTest.exec(@chunk)?.index ? @chunk.length
+      @tokens.push [ 'LITERAL', @chunk[...open_idx] ]
+      open_idx
     
-    this_close_idx = if not @is_reverse() and @tag() is 'MIDTAG'
-      close_idx = CloseTagTest.exec(@chunk)?.index ? @chunk.length
-    else if @is_reverse and @tag() is 'SMACK_OPERATOR' and @value() is ' '
-      close_idx = MidtagTest.exec(@chunk)?.index ? @chunk.length
+    return 0 if @type() is 'REGULAR' and @tag() isnt 'MIDTAG'
+    return 0 if @type() is 'REVERSE' and @tag() isnt 'SMACK_OPERATOR'
+    
+    close_idx = if @type() is 'REGULAR' and @tag() is 'MIDTAG'
+      CloseTagTest.exec(@chunk)?.index
+    else if @type() is 'REVERSE' and @tag() is 'SMACK_OPERATOR'
+      MidtagTest.exec(@chunk)?.index
+    
+    unless close_idx?
+      console.log "Warning, inside tag and no midtag/closetag found..." 
+      console.log "@tag(): ", @tag()
+      console.log "@value(): ", @value()
+      console.log "@type(): ", @type()
+      console.log "@chunk(): ", @chunk
 
-    return 0 unless this_close_idx
+    # Implement recursion here. later
+    # open_idx = OpenTagTest.exec(@chunk)?.index ? @chunk.length
     
-    literal = @chunk[0...this_close_idx]
+    literal = @chunk[0...close_idx]
 
     # Push token after trimming whitespace
     @tokens.push [ 'LITERAL', literal.replace(/^\s\s*/, '').replace(/\s\s*$/, '') ]
@@ -196,33 +157,35 @@ exports.Lexer = class Lexer
       console.log "Not a token: #{@chunk}"
       console.log '@tokens'
       console.log @tokens
+      console.log @check_status()
       throw "Fix your lexers"
     tok = @chunk[0]
     @tokens.push [ 'TOKEN', tok ]
     tok.length
 
-Element  = /^[a-zA-Z][a-zA-Z0-9]*/
-AttrAbbr = ///^([#.]+)([a-zA-Z][a-zA-Z0-9\-_]*)///
-AttrKey  = /^[a-zA-Z][a-zA-Z0-9\-_]*/
-AttrVal  = /^[a-zA-Z_ ][\-a-zA-Z0-9_ .]*/
-AttrList = /^(\|)([\s\S]*?)(\|)/
+OpenTagRE    = /^(~[|])(\s|[^<>]*?>)/
+OpenTagTest  =  /(~[|])(\s|[^<>]*?>)/
+CloseTagRE   = /^(<[^<>]*?|\s)([|]~)/
+CloseTagTest =  /(<[^<>]*?|\s)([|]~)/
+
+MidtagRE   = /^(>>|<<)/
+MidtagTest =  /(>>|<<)/
+
+SmackVariableRE = /$([a-zA-Z0-9_$]+)|${?([a-zA-Z0-9_$\[\].]+)}/
+
+# Zen Populator is a JS object to use in your template
+# Can also reference some global and preset values (think Ruby)
+# It's a JS identifier with a $ at the beginning
+# Token matching regexes.
+
+# Snatched from CoffeeScript
+Identifier = /([$A-Za-z_\x7f-\uffff][$\w\x7f-\uffff]*)/
+ZenPopulator = ///^\$([$A-Za-z_\x7f-\uffff][$\.\w\x7f-\uffff]*)///
+ZenAlias = /^@[a-zA-Z0-9\-_\.]+/
+
+Number = ///
+  ^ 0x[\da-f]+ |              # hex
+  ^ \d*\.?\d+ (?:e[+-]?\d+)?  # decimal
+///i
 
 Whitespace = /^\s+/
-
-# Smack operator
-SmackOperatorRE   = /^([\S]*?>|\x20)/
-SmackOperatorTest = /([\S]*?>|\x20)/
-SmackAliasRE      = /^@[a-zA-Z0-9_\-$]+/
-SmackVariableRE   = /^$([a-zA-Z0-9_$]+)|${?([a-zA-Z0-9_$\[\].]+)}/
-
-ZenOperator = /^[>+]/
-
-OpenTagRE    = /^(~[|])/
-OpenTagTest  = /(~[|])/
-CloseTagRE   = /^(~>[\S]*?|\x20)([|]~)/
-CloseTagTest = /(~>[\S]*?|\x20)([|]~)/
-
-# added (?!>) to disambiguate with closetag
-MidtagRE    = /^(~[\s]|[\s]~(?!>))/
-MidtagTest  = /(~[\s]|[\s]~(?!>))/
-

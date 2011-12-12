@@ -99,7 +99,7 @@ $tpl = <<<HTML
       
       <h1>Smack</h1>
       <script type="text/smack">
-        ~| cuz life is too short to be writing HTML ~h1 > small |~
+        ~| cuz life is too short to be writing HTML << h1 > small |~
       </script>
     </div>
     <div class="row">

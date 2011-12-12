@@ -10,16 +10,19 @@ $ ->
   
   
   $("#smack_input").val """
-    ~| You have Success!!!  ~ div.clear-fix > 
-                            p#status.error.block-message 
-                            |alt: Bla Bla Bla, target: #other-places, action: web.cgi| |~
+~|split |> p + p + p + p >>
+  Whoa | Bro | Low | Blow!
+|~
+~|split |> p > p > p > p >>
+  Whoa Bro Low Blow!
+|~
   """
   
   $("#smack_input").bind "input", ->
     try
       $('#text_output').html _.str.escapeHTML Smack.compile @value
       
-      $('#tokens_output').html ("#{tag}: #{value}<br>" for [tag, value] in Smack.tokens @value).join ' '
+      $('#tokens_output').html ("#{tag}: '#{value}'<br>" for [tag, value] in Smack.tokens @value).join ' '
           
       # $('#tokens_output').html _.str.escapeHTML(s).replace(/\n/g, '<br>').replace(/\x20/, "&nbsp;&nbsp;&nbsp;&nbsp;")
       $('#nodes_output').html "Coming soon:  to_s methods for the nodes!"

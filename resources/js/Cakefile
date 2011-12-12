@@ -28,7 +28,8 @@ header = """
 """
 
 sources = [
-  'Smack', 'AST', 'Lexer', 'Helper', 'Grammar', 'Browser', 'CLI', 'Optparse'
+  'Smack', 'Zen', 'AST', 'ZenAST', 'Lexer', 'ZenLexer'
+  'Helper', 'Grammar', 'ZenGrammar', 'Browser', 'CLI', 'Optparse'
 ].map (filename) -> "src/#{filename}.coffee"
 
 # Run a Smack through our node/coffee interpreter.
@@ -46,16 +47,18 @@ log = (message, color, explanation) ->
 task 'build:smack', 'build the CoffeeScript language from source', build = (cb) ->
   run ['-c', '-o', 'lib/smack'].concat(sources), cb
 
-task 'build:parser', 'rebuild the Jison parser (run build first)', ->
+task 'build:parser', 'build Jison parsers', ->
   extend global, require('util')
   require 'jison'
   parser = require('./lib/smack/Grammar').parser
   fs.writeFile 'lib/smack/Parser.js', parser.generate()
+  zen_parser = require('./lib/smack/ZenGrammar').zen_parser
+  fs.writeFile 'lib/smack/ZenParser.js', zen_parser.generate()
 
 task 'build:browser', 'rebuild the merged script for inclusion in the browser', ->
     
   code = ''
-  for name in ['Helper', 'Lexer', 'Parser', 'AST', 'Smack', 'Browser']
+  for name in ['Helper', 'ZenLexer', 'ZenParser', 'ZenAST', 'Zen', 'Lexer', 'Parser','AST', 'Smack', 'Browser']
     code += """
       require['./#{name}'] = new function() {
         var exports = this;

@@ -1,43 +1,41 @@
                             
 {Lexer}   = require './Lexer'
 {parser}  = require './Parser'
+Zen       = require './Zen'
+{extend}  = require './Helper'
 
-exports.VERSION = '0.0.1'
+# {ATTR_ABBR_LOOKUP} = require './AST'
 
-# Compile a string of code to JavaScript, using the Jison
-# compiler.
+exports.VERSION = '0.0.2'
+
 exports.compile = compile = (code, options = {}) ->
-  try
-    (parser.parse lexer.tokenize code).compile options
-  catch err
-    err.message = "In #{options.filename}, #{err.message}" if options.filename
-    throw err
+  (parser.parse lexer.tokenize code).compile options
 
-
-# Tokenize a string of CoffeeScript code, and return the array of tokens.
 exports.tokens = (code, options) ->
   lexer.tokenize code, options
 
-# Parse a string of CoffeeScript code or an array of lexed tokens, and
-# return the AST. You can then compile it by calling `.compile()` on the root,
-# or traverse it by using `.traverse()` with a callback.
 exports.nodes = (source, options) ->
   if typeof source is 'string'
     parser.parse lexer.tokenize source, options
   else
     parser.parse source
 
+exports.Zen = Zen
+
 lexer = new Lexer
-# The real Lexer produces a generic stream of tokens. This object provides a
-# thin wrapper around it, compatible with the Jison API. We can then pass it
-# directly as a "Jison lexer".
+
 parser.lexer =
-  lex: ->
-    [tag, @yytext] = @tokens[@pos++] or ['']
-    tag
-  setInput: (@tokens) ->
-    @pos = 0
-  upcomingInput: ->
-    ""
+  lex: -> [tag, @yytext] = @tokens[@pos++] or ['']; tag
+  setInput: (@tokens) -> @pos = 0
+  upcomingInput: -> ""
 
 parser.yy = require './AST'
+    
+exports.attr_abbr = (abbrs) ->
+  extend ATTR_ABBR_LOOKUP, abbrs
+    
+exports.remove_abbr = (abbrs) ->
+  delete ATTR_ABBR_LOOKUP[abbr] for abbr in abbrs
+
+exports.attr_abbrs = ->
+  ATTR_ABBR_LOOKUP

@@ -10,16 +10,13 @@ return unless window?
 compileEmbedded = ->
   scripts = document.getElementsByTagName 'script'
   for s in scripts when s.type is 'text/smack'
-    try
-      smack_el = document.createElement('div')
+    smack_el = document.createElement('div')
+    
+    smack_el.innerHTML = Smack.compile s.innerHTML
+    
+    s.parentNode.insertBefore(child, s) for child in smack_el.children
       
-      smack_el.innerHTML = Smack.compile s.innerHTML
-      
-      s.parentNode.insertBefore(child, s) for child in smack_el.children
-        
-      s.parentNode.removeChild s
-    catch e
-      console.log e
+    s.parentNode.removeChild s
   null
 
 # Bind SmackTag replacement to onload, both in browsers and in IE. <- 
