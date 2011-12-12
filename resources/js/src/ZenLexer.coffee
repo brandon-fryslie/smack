@@ -1,4 +1,6 @@
 
+{last, trim} = require './Helper'
+
 exports.ZenLexer = class ZenLexer
     
   TEST:
@@ -29,14 +31,11 @@ exports.ZenLexer = class ZenLexer
                         
     return @tokens
 
-  last: (array, back) ->
-    array[array.length - (back or 0) - 1]
-
   tag: (index, tag) ->
-    (tok = @last @tokens, index) and if tag then tok[0] = tag else tok[0]
+    (tok = last @tokens, index) and if tag then tok[0] = tag else tok[0]
   
   value: (index, val) ->
-    (tok = @last @tokens, index) and if val then tok[1] = val else tok[1]
+    (tok = last @tokens, index) and if val then tok[1] = val else tok[1]
 
   check_status: ->
     "chunk" : @chunk
@@ -66,8 +65,8 @@ exports.ZenLexer = class ZenLexer
     
   ZenOperator: ->
     return 0 unless match = ZenOperator.exec @chunk
-    [match, tag, op] = match
-    @tokens.push [ 'ZEN_OPERATOR', match ]
+    [match] = match
+    @tokens.push [ 'ZEN_OPERATOR', trim match ]
     match.length
 
   ZenPopulator: ->
@@ -81,6 +80,11 @@ exports.ZenLexer = class ZenLexer
     [match, tag, op] = match
     @tokens.push [ 'ZEN_ALIAS', match ]
     match.length
+  
+  Token: ->
+    return 0 unless @chunk[0] in @token
+    @tokens.push [ @chunk[0], @chunk[0] ]
+    1
 
   Whitespace: ->
     return 0 unless match = Whitespace.exec @chunk
@@ -90,7 +94,7 @@ exports.ZenLexer = class ZenLexer
     try
       throw null
     catch e
-      console.log '--- ERRROR ---'
+      console.log '--- ZenLexer Error ---'
       console.log "Not a token: #{@chunk}"
       console.log '@tokens'
       console.log @tokens
@@ -110,7 +114,10 @@ AttrKey  = /^[a-zA-Z][a-zA-Z0-9\-_]*/
 AttrVal  = /^[a-zA-Z_ ][\-a-zA-Z0-9_ .]*/
 AttrList = /^(\')([\s\S]*?)(\')/
 
-ZenOperator = /^[>+<]/
+# ZenOperator = /^[>+<]/
+ZenOperator = /^(?:[>+<]\s*)+/
+
+Token = ['(', ')']
 
 Whitespace = /^\s+/
 

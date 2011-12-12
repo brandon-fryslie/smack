@@ -18,8 +18,11 @@ browser:
 	rm -f SmackCompiler.js
 	cake build:browser
 
-lectura:
+lectura: scripts.coffee
 	coffee -c scripts.coffee
 
-upload:
-	scp SmackCompiler.js ../../index.php scripts.js bmf@lectura.cs.arizona.edu:/home/bmf/public_html/smack/resources/js/
+shared: SmackCompiler.js
+	cp SmackCompiler.js ../../../shared/js/
+
+upload: SmackCompiler.js scripts.js ../../index.php
+	scp SmackCompiler.js ../../index.php scripts.js bmf@lectura.cs.arizona.edu:/home/bmf/public_html/shared/js/

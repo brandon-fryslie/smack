@@ -1,5 +1,5 @@
 
-{trim, visit, flatten, print_tree} = require './Helper'
+{trim, visit, flatten, print_tree, last} = require './Helper'
 
 SINGLETONS = ['area', 'base', 'br', 'col', 'command', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source']
 
@@ -69,13 +69,14 @@ exports.ZenTag = class ZenTag extends Node
   constructor: (tag) ->
     @tags = [tag]
   
-  push: (zen_op, zen_tag) ->
+  push: (zen_op, {tags}) ->
     switch zen_op
       when '>'
-        @tags[@tags.length-1].children = @tags[@tags.length-1].children.concat(zen_tag.tags)
+        last(@tags).children = last(@tags).children.concat(tags)
       when '+'
-        @tags = @tags.concat zen_tag.tags
-        # console.log "@tags: ", @tags
+        @tags = @tags.concat tags
+     
+     
     this
     
   leaves: ->
@@ -90,7 +91,7 @@ exports.HtmlTag = class HtmlTag extends Node
     @content = ''
     @children = [] unless @el in SINGLETONS
   
-  set_content: (s) -> 
+  set_content: (s) ->
     @content = s
   
   leaves: ->

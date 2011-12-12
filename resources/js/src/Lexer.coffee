@@ -153,7 +153,7 @@ exports.Lexer = class Lexer
     try
       throw null
     catch e
-      console.log '--- ERRROR ---'
+      console.log '--- SmackLexer Error ---'
       console.log "Not a token: #{@chunk}"
       console.log '@tokens'
       console.log @tokens

@@ -18,6 +18,10 @@ exports.visit = visit = (tree, { preorder, postorder, leaf, inorder }) ->
 exports.indent = indent = (n) ->
   new Array(n+1).join '  '
 
+exports.last = (array, back) ->
+  array[array.length - (back or 0) - 1]
+
+
 exports.print_tree = print_tree = (tree) ->
   lvl = 0
   visit tree,
