@@ -1,6 +1,6 @@
 
 Zen = require './Zen'
-{trim, visit, flatten, print_tree} = require './Helper'
+{trim, visit, flatten, print_tree, last} = require './Helper'
 
 Node = class Node
   
@@ -16,7 +16,7 @@ exports.Body = class Body extends Node
 
 exports.SmackBlock = class SmackBlock extends Node
 
-  constructor: (front_op, @zentag, @content, rear_op) ->
+  constructor: (front_op, @zentag, @contents, rear_op) ->
     if front_op is ' '
       @op = if rear_op is ' ' then '>' else rear_op.split ' '
     else
@@ -24,30 +24,31 @@ exports.SmackBlock = class SmackBlock extends Node
     
   compile: (o) ->
     
-    Zen.nodes
     leaves = @zentag.leaves()
-    
+        
     last_node_idx = leaves.length-1
+    
+    return @zentag.compile o if last_node_idx is -1
     
     placeholder_re = /~\|\$[0-9]+\|~/
     last_leaf_re   = ///~\|\$#{last_node_idx}\|~///
     populator_re = /~\|\$[a-zA-Z0-9_]+\|~/
+
+    content = (c.compile() for c in @contents).join ''
                 
     switch @op[0]
       when 'split'
-            
-        content = @content.compile().split @op[1].replace('>','')
         
-        while content.length and leaves[last_node_idx]
+        content = content.split @op[1].replace('>','')
+        
+        while content.length and leaves[last_node_idx]?
           leaves[last_node_idx].set_content trim content.pop()
           last_node_idx--
         
-        html = @zentag.compile o
       when '>'
-        leaves[last_node_idx].set_content @content.compile()
-        html = @zentag.compile(o)
+        leaves[last_node_idx].set_content content
 
-    html
+    @zentag.compile o
     
 exports.ZenTag = class ZenTag extends Node
   

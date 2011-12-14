@@ -29,6 +29,9 @@ exports.Lexer = class Lexer
             @Whitespace() or
             @LexerError()
     return @tokens
+
+  toke: (tag, value) ->
+    @tokens.push [tag, value, @line]
   
   last: (array, back) ->
     array[array.length - (back or 0) - 1]
@@ -49,16 +52,18 @@ exports.Lexer = class Lexer
   OpenTag: ->
     return 0 unless match = OpenTagRE.exec @chunk
     [match, tag, op] = match
-        
-    @tokens.push [ 'OPENTAG', tag ]
     
-    @tokens.push [ 'SMACK_OPERATOR', op ]
+    @line++
+    
+    @toke 'OPENTAG', tag
+    
+    @toke 'SMACK_OPERATOR', op
     
     throw 'Lexer: Missing Smack Operator (Open)' if @tag() isnt 'SMACK_OPERATOR'
     
-    if @value() isnt ' '
+    if not /^\s$/.test @value()
       type = 'REGULAR'
-    else if (CloseTagTest.exec(@chunk)?.index ? @chunk.length) < (MidtagTest.exec(@chunk)?.index ? @chunk.length)
+    else if (CloseTagTest.exec(@chunk)?.index ? @chunk.length) < (MidtagTest.exec(@chunk)?.index ? @chunk.length)    
       type = 'EMPTY'
     else
       type = 'REVERSE'
@@ -70,7 +75,7 @@ exports.Lexer = class Lexer
   Midtag: ->
     return 0 unless match = MidtagRE.exec(@chunk)
     [match, tag] = match
-    @tokens.push [ 'MIDTAG', tag ]
+    @toke 'MIDTAG', tag
     match.length
   
   CloseTag: ->
@@ -78,18 +83,15 @@ exports.Lexer = class Lexer
       
     [match, op, tag] = match
     
-    @tokens.push [ 'SMACK_OPERATOR', op ]
+    @toke 'SMACK_OPERATOR', op
       
-    @tokens.push [ 'CLOSETAG', tag ]
+    @toke 'CLOSETAG', tag
+    
+    @line--
+    
+    @configuration_stack.pop()
     
     match.length
-  
-  SmackVariable: ->
-    return 0 unless match = SmackVariableRE.exec @chunk
-    [match, tag, op] = match
-    console.log 'smackvar' if @TEST?.SMACKVAR
-    @tokens.push [ 'SMACK_VARIABLE', match ]
-    match.length    
   
   ZenTag: ->
     return 0 if @configuration_stack.length is 0
@@ -103,11 +105,11 @@ exports.Lexer = class Lexer
     else if @type() is 'EMPTY' and @tag() is 'SMACK_OPERATOR'
       close_idx = CloseTagTest.exec(@chunk)?.index
       
-    throw "No closing MIDTAG or CLOSE_TAG for ZENTAG" unless close_idx?
+    throw {msg: "No closing MIDTAG or CLOSE_TAG for ZENTAG", chunk: @chunk, tokens: @tokens} unless close_idx?
     
     zentag = @chunk[0...close_idx]
     
-    @tokens.push [ 'ZENTAG', trim(zentag) ]
+    @toke 'ZENTAG', trim(zentag)
     close_idx
   
   # Literal text
@@ -117,31 +119,41 @@ exports.Lexer = class Lexer
     # If we aren't in a tag, it is a literal for sure
     return if @configuration_stack.length is 0
       open_idx = OpenTagTest.exec(@chunk)?.index ? @chunk.length
-      @tokens.push [ 'LITERAL', @chunk[...open_idx] ]
+      @toke 'UNTOUCHABLE', @chunk[...open_idx]
       open_idx
     
+    return 0 if @type() is 'EMPTY'
     return 0 if @type() is 'REGULAR' and @tag() isnt 'MIDTAG'
     return 0 if @type() is 'REVERSE' and @tag() isnt 'SMACK_OPERATOR'
     
-    close_idx = if @type() is 'REGULAR' and @tag() is 'MIDTAG'
-      CloseTagTest.exec(@chunk)?.index
+    open_tag_idx = OpenTagTest.exec(@chunk)?.index
+
+    if @type() is 'REGULAR' and @tag() is 'MIDTAG'
+      end_idx = CloseTagTest.exec(@chunk)?.index
     else if @type() is 'REVERSE' and @tag() is 'SMACK_OPERATOR'
-      MidtagTest.exec(@chunk)?.index
+      end_idx = MidtagTest.exec(@chunk)?.index
     
-    unless close_idx?
+    # Is this a nested tag?
+    end_idx = open_tag_idx if open_tag_idx < end_idx 
+    
+    unless end_idx?
       console.log "Warning, inside tag and no midtag/closetag found..." 
       console.log "@tag(): ", @tag()
       console.log "@value(): ", @value()
       console.log "@type(): ", @type()
       console.log "@chunk(): ", @chunk
 
-    # Implement recursion here. later
-    # open_idx = OpenTagTest.exec(@chunk)?.index ? @chunk.length
     
-    literal = @chunk[0...close_idx]
+    literal = @chunk[0...end_idx]
+    
+    to_push = []
+    
+    # Parse the literal for variables
+    while match = SmackVariable.exec literal
+      console.log match
 
     # Push token after trimming whitespace
-    @tokens.push [ 'LITERAL', literal.replace(/^\s\s*/, '').replace(/\s\s*$/, '') ]
+    @toke 'LITERAL', trim literal
 
     literal.length
     
@@ -160,18 +172,18 @@ exports.Lexer = class Lexer
       console.log @check_status()
       throw "Fix your lexers"
     tok = @chunk[0]
-    @tokens.push [ 'TOKEN', tok ]
+    @toke 'TOKEN', tok
     tok.length
 
 OpenTagRE    = /^(~[|])(\s|[^<>]*?>)/
 OpenTagTest  =  /(~[|])(\s|[^<>]*?>)/
-CloseTagRE   = /^(<[^<>]*?|\s)([|]~)/
-CloseTagTest =  /(<[^<>]*?|\s)([|]~)/
+CloseTagRE   = /^(\s|<.*?)([|]~)/
+CloseTagTest =  /(\s|<.*?)([|]~)/
 
 MidtagRE   = /^(>>|<<)/
 MidtagTest =  /(>>|<<)/
 
-SmackVariableRE = /$([a-zA-Z0-9_$]+)|${?([a-zA-Z0-9_$\[\].]+)}/
+SmackVariable = /^$([a-zA-Z0-9_$]+)|^${?([a-zA-Z0-9_$\[\].]+)}/
 
 # Zen Populator is a JS object to use in your template
 # Can also reference some global and preset values (think Ruby)

@@ -32,23 +32,6 @@ exports.ALIAS_BANK = ALIAS_BANK =
 node_idx = 1
 
 Node = class Node
-  
-  # constructor: (@children = []) ->
-  
-  # push: (node) -> @children.push node; this
-
-exports.Body = class Body extends Node
-  
-  constructor: (@expressions) ->
-    @children = ['expressions']
-    
-  leaves: ->
-    # console.log 'ZenAST Body Expressions:', @expressions
-    flatten @expressions.leaves()
-    
-  compile: (o) ->
-    o ?= {}
-    (@[n].compile(o) for n in @children).join ''
 
 exports.Parens = class Parens extends Node
   constructor: (@body) ->
@@ -69,41 +52,61 @@ exports.ZenTag = class ZenTag extends Node
   constructor: (tag) ->
     @tags = [tag]
   
-  push: (zen_op, {tags}) ->
-    switch zen_op
-      when '>'
-        last(@tags).children = last(@tags).children.concat(tags)
-      when '+'
-        @tags = @tags.concat tags
-     
-     
+  push: (tag) ->
+    @tags.push tag
     this
     
-  leaves: ->
-    (if t.children.length then t.leaves() else t) for t in @tags when t.children?
+  treeify: (o = {}) ->
+    root = children: [], name: 'root'
+    current = root
+    parents = []
     
-  compile: (o) ->
-    (t.compile(o) for t in @tags).join ''
+    while (tag = @tags.shift())
+      switch tag
+        when '>'
+          parents.push current
+          current = last current.children
+        when '<'
+          current = parents.pop() or root
+        when '#'
+          current = root
+        when '!'
+          if temp_current?
+            current = temp_current
+            temp_current = null
+          else
+            temp_current = current
+            current = children: []
+        when '+'
+          'noop'
+        else
+          current.children.push tag
+    @root = root
+    
+  leaves: ->
+    @treeify() unless @root?
+    flatten (t.leaves() for t in @root.children)    
+    
+  compile: (o = {}) ->
+    @treeify() unless @root?
+    (t.compile(o) for t in @root.children).join ''
    
 exports.HtmlTag = class HtmlTag extends Node
   
-  constructor: (@el, @abbreviated, @attributes, @populator) ->
-    @content = ''
+  constructor: (@el, @attributes = [], @content = '') ->
     @children = [] unless @el in SINGLETONS
   
   set_content: (s) ->
     @content = s
   
   leaves: ->
-    return this if @children.length is 0
-    c.leaves() for c in @children
+    return this if @children.length is 0 and @content is ''
+    c.leaves() for c in @children if @children?
     
   compile: (o) ->
     attrs = {}
-
-    attrs[key] = value for { key, value } in @attributes
     
-    for { key, value } in @abbreviated
+    for { key, value } in @attributes
       key = RESOLVE_ATTR_ABBR(key)
       if attrs[key]? and key is 'class'
         attrs['class'] += ' '+value

@@ -17,16 +17,27 @@ grammar =
     
   Smaxpression: [
     o 'SmackBlock'
-    o 'LITERAL', -> new Literal $1
+    o 'UNTOUCHABLE', -> new Literal $1
   ]
   
   SmackBlock: [
-    o 'OPENTAG SMACK_OPERATOR ZENTAG MIDTAG LITERAL SMACK_OPERATOR CLOSETAG', ->
-        new SmackBlock $2, new ZenTag($3), new Literal($5), $6
-    o 'OPENTAG SMACK_OPERATOR LITERAL MIDTAG ZENTAG SMACK_OPERATOR CLOSETAG', ->
-        new SmackBlock $2, new ZenTag($5), new Literal($3), $6
+    o 'OPENTAG SMACK_OPERATOR ZENTAG MIDTAG TagContents SMACK_OPERATOR CLOSETAG', ->
+        new SmackBlock $2, new ZenTag($3), $5, $6
+    o 'OPENTAG SMACK_OPERATOR TagContents MIDTAG ZENTAG SMACK_OPERATOR CLOSETAG', ->
+        new SmackBlock $2, new ZenTag($5), $3, $6
     o 'OPENTAG SMACK_OPERATOR ZENTAG SMACK_OPERATOR CLOSETAG', ->
-        new SmackBlock $2, new ZenTag($3), new Literal(''), $4
+        new SmackBlock $2, new ZenTag($3), [], $4
+  ]
+  
+  TagContents: [
+    o 'TagContent', -> [$1]
+    o 'TagContents TagContent', -> $1.concat $2
+  ]
+  
+  TagContent: [
+    o 'LITERAL', -> new Literal $1
+    o 'SMACK_VARIABLE', -> new SmackVariable $1
+    o 'SmackBlock'
   ]
   
   

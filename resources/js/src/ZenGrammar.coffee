@@ -6,51 +6,33 @@
 grammar =
   
   Root: [
-    o '', -> new Body ''
     o 'Body'
   ]
   
   Body: [
-    o 'Zenspression', -> new Body $1
-    o 'Body Zenpression', -> $1.push $2
+    o 'Zenspression', -> new ZenTag $1
+    o 'Body Zenspression', -> $1.push $2
   ]
    
   Zenspression: [
-   o 'ZenTag'
-   o 'ZenOperation'
+   o 'HtmlTag'
+   o 'ZEN_OPERATOR'
    o 'ZenAlias'
   ]
   
-  Parenthetical: [
-    o '( Body )', -> $2
-  ]
-  
-  ZenOperation: [
-    o 'Zenspression ZEN_OPERATOR Zenspression', -> $1.push $2, $3
-  ]
-  
-  ZenTag: [
-    o 'HtmlTag', -> new ZenTag $1
-  ]
+  # Parenthetical: [
+  #   o '( ZenTag )', -> $2
+  # ]
 
   HtmlTag: [
-    o 'ELEMENT AbbreviatedAttributeList AttributeList', -> new HtmlTag $1, $2, $3
-    o 'ELEMENT AbbreviatedAttributeList AttributeList ZEN_POPULATOR', -> new HtmlTag $1, $2, $3, $4
-  ]
-
-  AbbreviatedAttributeList: [
-    o '', -> []
-    o 'AbbreviatedAttributes', -> $1
-  ]
-  
-  AbbreviatedAttributes: [
-    o 'ABBREVIATED_ATTRIBUTE', -> [$1]
-    o 'AbbreviatedAttributes ABBREVIATED_ATTRIBUTE', -> $1.concat $2
-  ]
-  
-  AttributeList: [
-    o '', -> []
-    o 'ATTR_LIST_OPEN Attributes ATTR_LIST_CLOSE', -> $2
+    o 'ELEMENT', ->
+        new HtmlTag $1
+    o 'ELEMENT Attributes', ->
+        new HtmlTag $1, $2
+    o 'ELEMENT TAG_CONTENT', ->
+        new HtmlTag $1, null, $2
+    o 'ELEMENT Attributes TAG_CONTENT', ->
+        new HtmlTag $1, $2, $3
   ]
   
   Attributes: [

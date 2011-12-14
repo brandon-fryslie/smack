@@ -14,7 +14,7 @@ exports.ZenLexer = class ZenLexer
   tokenize: (code) ->
         
     @code = code.replace(/\r/g, '')
-    @line = 0
+    @depth = 1
     @tokens = []
 
     i = 0
@@ -24,12 +24,15 @@ exports.ZenLexer = class ZenLexer
             @AttributeAbbreviation() or
             @AttributeList() or
             @ZenOperator() or
-            @ZenPopulator() or
+            @TagContent() or
             @ZenAlias() or
             @Whitespace() or
             @LexerError()
                         
     return @tokens
+
+  toke: (tag, value) ->
+    @tokens.push [tag, value, @depth]
 
   tag: (index, tag) ->
     (tok = last @tokens, index) and if tag then tok[0] = tag else tok[0]
@@ -43,47 +46,50 @@ exports.ZenLexer = class ZenLexer
   Element: ->
     return 0 unless match = Element.exec(@chunk)
     [match] = match
-    @tokens.push [ 'ELEMENT', match ]
+    @toke 'ELEMENT', match
     match.length
   
   AttributeAbbreviation: ->
     return 0 unless match = ClassAbbr.exec(@chunk) or match = AttrAbbr.exec(@chunk)
     [match, key, value] = match
-    @tokens.push [ 'ABBREVIATED_ATTRIBUTE', { key, value } ]
+    @toke 'ATTRIBUTE', { key, value }
     match.length
   
   AttributeList: ->
     return 0 unless match = AttrList.exec @chunk
-    @tokens.push [ 'ATTR_LIST_OPEN', match[1] ]
-    for attr in match[2].split ','
+    [match, attributes] = match
+    
+    for attr in attributes.split ','
       [key, value] = attr.split /:\s/
-      @tokens.push ['ATTRIBUTE', { key, value }]
-    
-    @tokens.push [ 'ATTR_LIST_CLOSE', match[3] ]
-    
-    match[0].length
+      @toke 'ATTRIBUTE', { key, value }
+        
+    match.length
     
   ZenOperator: ->
     return 0 unless match = ZenOperator.exec @chunk
     [match] = match
-    @tokens.push [ 'ZEN_OPERATOR', trim match ]
+    @toke 'ZEN_OPERATOR', trim match
+    
+    @depth++ if '>' is trim match
+    @depth-- if '<' is trim match
+      
     match.length
 
-  ZenPopulator: ->
-    return 0 unless match = ZenPopulator.exec @chunk
-    [match, tag, op] = match
-    @tokens.push [ 'ZEN_POPULATOR', match ]
+  TagContent: ->
+    return 0 unless match = TagContent.exec @chunk
+    [match, content] = match
+    @toke 'TAG_CONTENT', trim content
     match.length
     
   ZenAlias: ->
     return 0 unless match = ZenAlias.exec @chunk
     [match, tag, op] = match
-    @tokens.push [ 'ZEN_ALIAS', match ]
+    @toke 'ZEN_ALIAS', match
     match.length
   
   Token: ->
-    return 0 unless @chunk[0] in @token
-    @tokens.push [ @chunk[0], @chunk[0] ]
+    return 0 unless @chunk[0] in Tokens
+    @toke @chunk[0], @chunk[0]
     1
 
   Whitespace: ->
@@ -112,12 +118,13 @@ AttrAbbr = ///^
           ///
 AttrKey  = /^[a-zA-Z][a-zA-Z0-9\-_]*/
 AttrVal  = /^[a-zA-Z_ ][\-a-zA-Z0-9_ .]*/
-AttrList = /^(\')([\s\S]*?)(\')/
+AttrList    = /^\|([\s\S]*?)\|/
+TagContent  = /^\'([\s\S]*?)\'/
 
 # ZenOperator = /^[>+<]/
-ZenOperator = /^(?:[>+<]\s*)+/
+ZenOperator = /^[>+<!#]/
 
-Token = ['(', ')']
+Tokens = ['(', ')']
 
 Whitespace = /^\s+/
 

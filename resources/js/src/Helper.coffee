@@ -35,7 +35,7 @@ exports.print_tree = print_tree = (tree) ->
 
 exports.trim = (s, chars) ->
   return String.prototype.trim.call(s) if not chars? and String.prototype.trim?      
-  s.replace /^\s+|\s+$/g, ''
+  s.replace(/^\s\s*/, '').replace(/\s\s*$/, '')
 
 exports.escape_html = (s) ->
   s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')

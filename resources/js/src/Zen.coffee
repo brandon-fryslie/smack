@@ -19,7 +19,7 @@ exports.leaves = (nodes, options) ->
 lexer = new ZenLexer
 
 parser.lexer =
-  lex: -> [tag, @yytext] = @tokens[@pos++] or ['']; tag
+  lex: -> [tag, @yytext, @yylineno] = @tokens[@pos++] or [''];tag
   setInput: (@tokens) -> @pos = 0
   upcomingInput: -> ""
 
