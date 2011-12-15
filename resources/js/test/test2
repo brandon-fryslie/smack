@@ -1,2 +1,2 @@
-~|> p#status.block-message~ Upload Successful! |~
-~| Upload Successful! ~p#status.block-message |~
+~:> p#status.block-message~ Upload Successful! :~
+~: Upload Successful! ~p#status.block-message :~

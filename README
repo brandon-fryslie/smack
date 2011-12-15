@@ -7,20 +7,20 @@ Readable
 Ideas
 =====
 Default Attrs for Tags
-~|(a:target=doc-iframe)|~
-  ~| Button1 ~li>a|~
-~||~
+~:(a:target=doc-iframe):~
+  ~: Button1 ~li>a:~
+~::~
 
 Zen HTML Tags in the Element Part
-~| Button1 ~button
+~: Button1 ~button
 
 Tag Memory
-~| Button1 ~button.btn |~
-~| Button2 |~
-~| Button3 |~
+~: Button1 ~button.btn :~
+~: Button2 :~
+~: Button3 :~
 
 Variables
-~| Hi {$name}! ~.info|~
+~: Hi {$name}! ~.info:~
 
 Wrapping Blocks
 $v if array
@@ -29,7 +29,7 @@ $i is the # of iteration
 $first is true on first
 $last is true on last
 
-~|$object k v ( $k li>a.btn|href:$v ) |~
+~:$object k v ( $k li>a.btn|href:$v ) :~
 
 Extra
 =====
@@ -64,7 +64,7 @@ Packs of aliases / possibly other features packaged into little plugins for spec
 <!-- Block Klasses -->
 <!-- ============= -->
 <!-- Define a set of attributes to apply like -->
-<!-- ~|&+ invisible~ width:0 height:0 |~ -->
+<!-- ~:&+ invisible~ width:0 height:0 :~ -->
 
 Functionalisms (Ruby style Blocks with globals)
 Filter = %
@@ -87,16 +87,16 @@ Variables
 Tag operators
 =============
 Sed
-~|s/(\w+)/\U$1> p~ Error:$error |~
-~| Error:$error ~p s/(\w+)/\U$1|~
+~:s/(\w+)/\U$1> p~ Error:$error :~
+~: Error:$error ~p s/(\w+)/\U$1:~
 
 Wrap
 <li><a href="resources/docs/2_HPC.html" target="doc-iframe">HPC</a></li>
 
 
-~|[li>a(+)doc-iframe] #{object <href,btn_text> }> ul.dropdown-menu~
+~:[li>a(+)doc-iframe] #{object <href,btn_text> }> ul.dropdown-menu~
   btn_text |href: href|
-|~
+:~
 
 turns into something like
 
@@ -109,7 +109,7 @@ turns into something like
 Loops
 =====
 Loop block
-~|
+~:
 
 
 

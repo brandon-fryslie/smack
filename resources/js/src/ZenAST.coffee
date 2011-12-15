@@ -7,10 +7,10 @@ ABBREVIATION_LOOKUP =
   '#'     : 'id'
   '.'     : 'class'
   '::'    : 'type'
-  '(4)'   : 'for'
-  '(+)'   : 'target'
-  '(=)'   : 'value'
-  '(!)'   : 'action'
+  '4'     : 'for'
+  '+'     : 'target'
+  '='     : 'value'
+  '!'     : 'action'
 
 PRIMARY_ATTRIBUTES =
   a       : 'href'
@@ -27,8 +27,7 @@ DEFAULT_ATTRIBUTES =
   iframe  : { style : 'border:0;width:0px;height:0px' }
 
 ALIAS_BANK =
-  bs:
-    input_box: '> div.clearfix >  div.input > label'
+  input_box: '> div.clearfix > div.input > label'
 
 
 GET_DEFAULT_ATTRIBUTES = (el) ->
@@ -142,7 +141,7 @@ exports.HtmlTag = class HtmlTag extends Node
     else if @populator?
       content_str = @populator
     else if o.leaves?
-      content_str = "~|$#{node_idx++}|~"
+      content_str = "~:$#{node_idx++}:~"
     else
       content_str = @content
     

@@ -175,29 +175,14 @@ exports.Lexer = class Lexer
     @toke 'TOKEN', tok
     tok.length
 
-OpenTagRE    = /^(~[|])(\s|[^<>]*?>)/
-OpenTagTest  =  /(~[|])(\s|[^<>]*?>)/
-CloseTagRE   = /^(\s|<.*?)([|]~)/
-CloseTagTest =  /(\s|<.*?)([|]~)/
+OpenTagRE    = /^(~:)(\s|[^<>]*?>)/
+OpenTagTest  =  /(~:)(\s|[^<>]*?>)/
+CloseTagRE   = /^(\s|<.*?)(:~)/
+CloseTagTest =  /(\s|<.*?)(:~)/
 
 MidtagRE   = /^(>>|<<)/
 MidtagTest =  /(>>|<<)/
 
 SmackVariable = /^$([a-zA-Z0-9_$]+)|^${?([a-zA-Z0-9_$\[\].]+)}/
-
-# Zen Populator is a JS object to use in your template
-# Can also reference some global and preset values (think Ruby)
-# It's a JS identifier with a $ at the beginning
-# Token matching regexes.
-
-# Snatched from CoffeeScript
-Identifier = /([$A-Za-z_\x7f-\uffff][$\w\x7f-\uffff]*)/
-ZenPopulator = ///^\$([$A-Za-z_\x7f-\uffff][$\.\w\x7f-\uffff]*)///
-ZenAlias = /^@[a-zA-Z0-9\-_\.]+/
-
-Number = ///
-  ^ 0x[\da-f]+ |              # hex
-  ^ \d*\.?\d+ (?:e[+-]?\d+)?  # decimal
-///i
 
 Whitespace = /^\s+/

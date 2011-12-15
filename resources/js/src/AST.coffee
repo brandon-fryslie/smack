@@ -30,9 +30,9 @@ exports.SmackBlock = class SmackBlock extends Node
     
     return @zentag.compile o if last_node_idx is -1
     
-    placeholder_re = /~\|\$[0-9]+\|~/
-    last_leaf_re   = ///~\|\$#{last_node_idx}\|~///
-    populator_re = /~\|\$[a-zA-Z0-9_]+\|~/
+    placeholder_re = /~\|\$[0-9]+\:~/
+    last_leaf_re   = ///~\|\$#{last_node_idx}\:~///
+    populator_re = /~\|\$[a-zA-Z0-9_]+\:~/
 
     content = (c.compile() for c in @contents).join ''
                 

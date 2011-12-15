@@ -2,7 +2,7 @@
 
 Smack:
 
-~|> p~ Hi! |~
+~:> p~ Hi! :~
 
 HTML:
 
@@ -12,7 +12,7 @@ HTML:
 
 Smack:
 
-~|> p#status.block-message~ Upload Successful! |~
+~:> p#status.block-message~ Upload Successful! :~
 
 HTML:
 
@@ -22,7 +22,7 @@ HTML:
 
 Smack:
 
-~|> Upload Successful! ~p#status.block-message |~
+~:> Upload Successful! ~p#status.block-message :~
 
 HTML:
 
@@ -32,11 +32,11 @@ HTML:
 
 Smack:
 
-~|>
+~:>
   p#status.block-message |alt:Bla Bla Bla| > div.clear-fix~
 
   Upload Successful!
-|~
+:~
 
 HTML:
 
@@ -50,7 +50,7 @@ HTML:
 
 Smack:
 
-~|> Upload Successful! ~p#status.block-message |alt:Bla Bla Bla| > div.clear-fix |~
+~:> Upload Successful! ~p#status.block-message |alt:Bla Bla Bla| > div.clear-fix :~
 
 HTML:
 

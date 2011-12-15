@@ -32,7 +32,7 @@ test 'Zen Lone Element', ->
   Zen.compile('p').should.equal('<p></p>')
 
 test 'Zen Leaves', ->
-  Zen.compile('p', leaves: true).should.equal('<p>~|$1|~</p>')
+  Zen.compile('p', leaves: true).should.equal('<p>~:$1:~</p>')
   
 
 test 'Zen El with Abbreviated Attributes', ->
@@ -123,6 +123,10 @@ img:pic.jpg
 link:bootstrap.css
 input:Username
 form:web.cgi""").should.equal("""<a href="google.com"></a><script src="yahoo.com/query.js"></script><img alt="" src="pic.jpg"><link rel="stylesheet" href="bootstrap.css"><input type="text" value="Username"><form action="web.cgi"></form>""")
+
+test 'Shorthand Attributes', ->
+  Zen.compile('meta(rel)start').should.equal('<meta rel="start">')
+
 
 console.log
 console.log

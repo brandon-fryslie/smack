@@ -2,7 +2,7 @@ require('coffee-script')
 
 # LoveTap
 # 
-# ~|> p#id.class.another-class Data |~
+# ~:> p#id.class.another-class Data :~
 
 class LoveTap
   
@@ -37,8 +37,8 @@ class LoveTap
     console.log "classes: #{classes}"
     console.log "attrs: #{attrs}"
     
-  s_fwd: "~|> p#status.block-message |alt:Bla Bla Bla| > div.clear-fix~ You have Success!!! |~"
-  s_rev: "~| You have Success!!! ~p#status.block-message |alt:Bla Bla Bla| > div.clear-fix |~"
+  s_fwd: "~:> p#status.block-message |alt:Bla Bla Bla| > div.clear-fix~ You have Success!!! :~"
+  s_rev: "~: You have Success!!! ~p#status.block-message |alt:Bla Bla Bla| > div.clear-fix :~"
   
   TAG_FWD: ///^
           ~[|]>\s* # Open Tag

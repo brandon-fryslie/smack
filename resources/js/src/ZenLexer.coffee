@@ -120,10 +120,12 @@ AttrAbbr = /^([#.]|::|&[a-z\-]+:)([a-zA-Z][a-zA-Z0-9\-_]*)/
 
 # Value (=), Target (+), Action (!)
 # These need a wider variety of characters
-ExtendedAttrAbbr = /^(\([4=+!a-z]\))((?:http:\/\/)?[^(\s:]+)/
+# Special case http: so we can catch : at the end
+ExtendedAttrAbbr = /^\(([4=+!]|[a-z]+)\)((?:http:)?[^(\s:]+)/
 
 # : accesses the primary attribute for that element
 PrimaryAttrAbbr = /^(:)([^(\s]+)/
+
 AttrList        = /^\|([\s\S]*?)\|/
 TagContent      = /^[w]?\'([\s\S]*?)\'|\$([a-zA-Z0-9_-])+/
 ZenOperator     = /^[>+<!#]/

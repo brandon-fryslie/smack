@@ -3,21 +3,21 @@ Smack = this.Smack
 
 $ ->
   $('#smack_input').val """
-    ~| Hi there! ~p |~
-    ~|> p#status.block-message |alt:Bla Bla Bla| > div.clear-fix~ You have Success!!! |~
-    ~| You have Success!!! ~p#status.block-message |alt:Bla Bla Bla| > div.clear-fix |~
+    ~: Hi there! ~p :~
+    ~:> p#status.block-message |alt:Bla Bla Bla| > div.clear-fix~ You have Success!!! :~
+    ~: You have Success!!! ~p#status.block-message |alt:Bla Bla Bla| > div.clear-fix :~
   """
   
   
   $("#smack_input").val """
-~| img input |~
+~: img input :~
   
-~| div.alert-message.block-message.info |~
+~: div.alert-message.block-message.info :~
 
-~|> p >> Yo bro! |~
-~| Yo bro! << p |~
+~:> p >> Yo bro! :~
+~: Yo bro! << p :~
 
-~|
+~:
 div.topbar
   > div.fill
     > div.container-fluid
@@ -31,17 +31,17 @@ div.topbar
             + 'HPC' li > a+doc-iframe |href: resources/docs/2_HPC.html| <
             + 'Blast' li > a+doc-iframe |href: resources/docs/3_Blast.html| <
             + 'Newbler' li > a+doc-iframe |href: resources/docs/4_Newbler.html| <
-|~
+:~
 
-~|> div >>
-  ~| p b i |~
-  ~| ul
+~:> div >>
+  ~: p b i :~
+  ~: ul
     > li 'Stuff'
       li 'Goes'
       li 'In'
       li 'Here'
-  |~
-|~
+  :~
+:~
 """
   
   $("#smack_input").bind "input", ->
