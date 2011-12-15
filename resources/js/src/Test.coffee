@@ -1,5 +1,5 @@
 
-{Smack}  = require '../SmackCompiler'
+Smack  = require './Smack'
 c = Smack.compile
 t = Smack.tokens
 
@@ -13,10 +13,6 @@ test = (name, fn) ->
     console.log err.stack or err
     return
   console.log '  √ %s', name
-
-easy1 = "~|> p >> Yo bro! |~"
-easy2 = "~| Yo bro! << p |~"
-easy3 = "~| p |~"
 
 console.log
 
@@ -84,25 +80,24 @@ test 'Smack Site HTML', ->
 
 test 'Smack Bootstrap Topbar', ->
   text = """
-  
 ~|
 div.topbar
   > div.fill
     > div.container-fluid
-      > a.brand |href: #| 'RV'
-      + ul.nav |data-tabs: tabs|
-        > li.active > a |href: #viewer-tab| <
-        + li.dropdown |data-dropdown: dropdown|
-          > a.dropdown-toggle |href: #doc-tab|
+      > 'RV' a.brand:#
+      + ul.nav&tabs:tabs
+        > li.active 
+          > 'Recruitment Viewer' a:#viewer-tab <
+        + li.dropdown&dropdown:dropdown
+          > 'Documentation' a.dropdown-toggle:#doc-tab
           + ul.dropdown-menu
-            > li > a+doc-iframe |href: resources/docs/1_gene_annotation.html| <
-            + li > a+doc-iframe |href: resources/docs/2_HPC.html| <
-            + li > a+doc-iframe |href: resources/docs/3_Blast.html| <
-            + li > a+doc-iframe |href: resources/docs/4_Newbler.html| <
-|~
+            > 'Gene Annotation' li > a(+)doc-iframe:resources/docs/1_gene_annotation.html <
+            + 'HPC'             li > a(+)doc-iframe:resources/docs/2_HPC.html             <
+            + 'Blast'           li > a(+)doc-iframe:resources/docs/3_Blast.html           <
+            + 'Newbler'         li > a(+)doc-iframe:resources/docs/4_Newbler.html         <
+|~"""
 
-"""
-  # Smack.compile(text).should.equal '<div></div>'
+  Smack.compile(text).should.equal '<div class="topbar"><div class="fill"><div class="container-fluid"><a class="brand" href="#">RV</a><ul class="nav" data-tabs="tabs"><li class="active"><a href="#viewer-tab">Recruitment Viewer</a></li><li class="dropdown" data-dropdown="dropdown"><a class="dropdown-toggle" href="#doc-tab">Documentation</a><ul class="dropdown-menu"><li><a target="doc-iframe" href="resources/docs/1_gene_annotation.html"></a></li><li><a target="doc-iframe" href="resources/docs/2_HPC.html"></a></li><li><a target="doc-iframe" href="resources/docs/3_Blast.html"></a></li><li><a target="doc-iframe" href="resources/docs/4_Newbler.html"></a></li></ul></li></ul></div></div></div>'
 
 test 'Smack Recursive', ->
   text = """

@@ -1,9 +1,15 @@
 <?php
 
 if ($_SERVER['HTTP_HOST'] == 'localhost')
-  $resource_path = 'http://localhost/smack/combine.php';
+{
+  $resource_path = 'http://localhost/smack';
+  $app_path = "$resource_path/resources/node-load.php";  
+}
 else if ($_SERVER['HTTP_HOST'] == 'cgi.cs.arizona.edu')
-  $resource_path = 'http://cgi.cs.arizona.edu/~bmf/smack/combine.php';
+{
+  $resource_path = 'http://cgi.cs.arizona.edu/~bmf/smack';
+  $app_path = "$resource_path/combine.php/js/mini:no/SmackCompiler";  
+}
 else
   die('Unknown HTTP_HOST: '+$_SERVER['HTTP_HOST']);
 
@@ -13,10 +19,10 @@ $tpl = <<<HTML
   "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-  <script src="{$resource_path}/js/mini:yes/jquery-1.6.2.min,underscore-min,underscore.string,backbone,bootstrap-tabs"></script>
-  <script src="{$resource_path}/js/mini:no/SmackCompiler"></script>
-  <script src="{$resource_path}/js/mini:no/scripts"></script>
-  <link rel="stylesheet" href="{$resource_path}/css/mini:no/bootstrap~bootstrap">  
+  <script src="{$resource_path}/combine.php/js/mini:yes/jquery.min,underscore-min,underscore.string,backbone,bootstrap-tabs"></script>
+  <script src="{$app_path}"></script>
+  <script src="{$resource_path}/combine.php/js/mini:no/scripts"></script>
+  <link rel="stylesheet" href="{$resource_path}/combine.php/css/mini:no/bootstrap.min">  
   <style>
     .container > footer p {
       text-align: center; /* center align it with the container */
@@ -58,6 +64,10 @@ $tpl = <<<HTML
       width: 400px; height: 450px;
       border: 1px solid #CCC;
       background-color: #FFF;
+    }
+    .tab-pane
+    {
+      overflow: auto;
     }
     #error
     {

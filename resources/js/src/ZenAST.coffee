@@ -1,34 +1,51 @@
 
-{trim, visit, flatten, print_tree, last} = require './Helper'
+{trim, visit, flatten, print_tree, last, extend} = require './Helper'
 
 SINGLETONS = ['area', 'base', 'br', 'col', 'command', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source']
 
-exports.POPULATOR_BANK = POPULATOR_BANK = {}
+ABBREVIATION_LOOKUP =
+  '#'     : 'id'
+  '.'     : 'class'
+  '::'    : 'type'
+  '(4)'   : 'for'
+  '(+)'   : 'target'
+  '(=)'   : 'value'
+  '(!)'   : 'action'
 
-exports.ATTR_ABBR_LOOKUP = ATTR_ABBR_LOOKUP =
-  '#'  : 'id'
-  '.'  : 'class'
-  '4'  : 'for'
-  '+'  : 'target'
-  '='  : 'value'
-  '!'  : 'action'
-  '$'  : 'name'
-  '::' : 'type'
+PRIMARY_ATTRIBUTES =
+  a       : 'href'
+  script  : 'src'
+  img     : 'src'
+  link    : 'href'
+  input   : 'value'
+  form    : 'action'
 
-RESOLVE_ATTR_ABBR = (abbreviation) ->
+DEFAULT_ATTRIBUTES =
+  img     : { alt   : '' }
+  input   : { type  : 'text' }
+  link    : { rel   : 'stylesheet' }
+  iframe  : { style : 'border:0;width:0px;height:0px' }
+
+ALIAS_BANK =
+  bs:
+    input_box: '> div.clearfix >  div.input > label'
+
+
+GET_DEFAULT_ATTRIBUTES = (el) ->
+  return extend {}, DEFAULT_ATTRIBUTES[el]
+
+RESOLVE_ABBREVIATION = (abbreviation, el) ->
     
-  return ATTR_ABBR_LOOKUP[abbreviation] if abbreviation of ATTR_ABBR_LOOKUP
+  return ABBREVIATION_LOOKUP[abbreviation] if abbreviation of ABBREVIATION_LOOKUP
+
+  return PRIMARY_ATTRIBUTES[el] if abbreviation is ':' and el of PRIMARY_ATTRIBUTES
 
   match = /^&([a-z\-]+):/.exec abbreviation
   
   return "data-#{match[1]}" if match?[1]?
   
-  throw "AST says invalid attribute abbreviation: #{abbreviation}"
+  abbreviation
     
-exports.ALIAS_BANK = ALIAS_BANK =
-  bs:
-    input_box: '> div.clearfix >  div.input > label'
-
 node_idx = 1
 
 Node = class Node
@@ -85,7 +102,7 @@ exports.ZenTag = class ZenTag extends Node
     
   leaves: ->
     @treeify() unless @root?
-    flatten (t.leaves() for t in @root.children)    
+    flatten (t.leaves() for t in @root.children)
     
   compile: (o = {}) ->
     @treeify() unless @root?
@@ -104,10 +121,10 @@ exports.HtmlTag = class HtmlTag extends Node
     c.leaves() for c in @children if @children?
     
   compile: (o) ->
-    attrs = {}
+    attrs = GET_DEFAULT_ATTRIBUTES @el
     
     for { key, value } in @attributes
-      key = RESOLVE_ATTR_ABBR(key)
+      key = RESOLVE_ABBREVIATION(key, @el)
       if attrs[key]? and key is 'class'
         attrs['class'] += ' '+value
       else
@@ -131,3 +148,7 @@ exports.HtmlTag = class HtmlTag extends Node
     
     "<#{@el}#{id_class_s}#{attr_s}>#{content_str}#{foot_str}"
     
+exports.ALIAS_BANK          = ALIAS_BANK
+exports.DEFAULT_ATTRIBUTES  = DEFAULT_ATTRIBUTES
+exports.PRIMARY_ATTRIBUTES  = PRIMARY_ATTRIBUTES
+exports.ABBREVIATION_LOOKUP = ABBREVIATION_LOOKUP

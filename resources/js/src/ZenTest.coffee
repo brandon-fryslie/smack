@@ -3,7 +3,9 @@
 # fs = require 'fs'
 # path = require 'path'
 
-{Zen}  = (require '../SmackCompiler').Smack
+Zen  = require './Zen'
+{DEFAULT_ATTRIBUTES} = require './ZenAST'
+
 should = require 'should'
 
 console.log()
@@ -40,7 +42,8 @@ test 'Zen El with Abbreviated Attributes', ->
     [ 'ATTRIBUTE', { key: '.', value: 'block-message' }, 1 ],
     [ 'ATTRIBUTE', { key: '.', value: 'info' }, 1 ] ])
   Zen.compile('div.alert-message.block-message.info').should.equal('<div class="alert-message block-message info"></div>')
-  Zen.compile('input#username.input-field+input-form4username=Username::text').should.equal('<input id="username" class="input-field" target="input-form" for="username" value="Username" type="text">')
+  Zen.compile('input#username.input-field(4)username(+)input-form(=)Username').should.equal('<input id="username" class="input-field" type="text" for="username" target="input-form" value="Username">')
+  Zen.compile('form(+)http://www.google.com:http://www.microsoft.com').should.equal('<form target="http://www.google.com" action="http://www.microsoft.com"></form>')
 
 test 'Zen Operator', ->
   s = 'div > p'
@@ -70,8 +73,6 @@ test 'Zen Siblings', ->
   Zen.compile('p div span button').should.equal '<p></p><div></div><span></span><button></button>'
 
 test 'Zen Descendent (>)', ->
-  # console.log Zen.nodes('p > p > p > p')
-  # console.log 'ZenNodes',Zen.nodes('p > p > p > p').expressions
   Zen.compile('p > div > span > button').should.equal '<p><div><span><button></button></span></div></p>'
 
 test 'Zen Ascendent (<)', ->
@@ -82,33 +83,46 @@ p > b < p > i
 
 test 'Zen Root (#)', ->
   text = """
-# div 
+# div
   > p
     > span
       > i
-# div 
+# div
   > ul
 """
   Zen.compile(text).should.equal('<div><p><span><i></i></span></p></div><div><ul></ul></div>')
 
 test 'Zen Cleave (!)', ->
   text = """
-div 
+div
   > p
     > span
       > i
-! div 
+! div
   > ul <
 """
   Zen.compile(text).should.equal('<div><p><span><i></i></span></p></div>')
 
 test 'Tag Content', ->
   text = """
-ul 
+ul
   > li 'Blarney'
   + li 'Stone'
 """
   Zen.compile(text).should.equal('<ul><li>Blarney</li><li>Stone</li></ul>')
+
+test 'Default Attributes', ->
+  Zen.compile('img input').should.equal('<img alt=""><input type="text">')
+  Zen.compile('iframe').should.equal('<iframe style="border:0;width:0px;height:0px"></iframe>')
+
+test 'Primary Attributes', ->
+  Zen.compile("""
+a:google.com
+script:yahoo.com/query.js
+img:pic.jpg
+link:bootstrap.css
+input:Username
+form:web.cgi""").should.equal("""<a href="google.com"></a><script src="yahoo.com/query.js"></script><img alt="" src="pic.jpg"><link rel="stylesheet" href="bootstrap.css"><input type="text" value="Username"><form action="web.cgi"></form>""")
 
 console.log
 console.log

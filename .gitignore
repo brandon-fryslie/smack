@@ -3,5 +3,7 @@ coffee_test
 Old
 resources/js/lib/*
 resources/js/extras/*
-resources/js/SmackCompiler.js
-resources/js/scripts.js
+resources/js/*.js
+
+historical/
+*.js

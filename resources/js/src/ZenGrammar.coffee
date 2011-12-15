@@ -31,8 +31,12 @@ grammar =
         new HtmlTag $1, $2
     o 'ELEMENT TAG_CONTENT', ->
         new HtmlTag $1, null, $2
-    o 'ELEMENT Attributes TAG_CONTENT', ->
+    o 'ELEMENT TAG_CONTENT Attributes', ->
         new HtmlTag $1, $2, $3
+    o 'TAG_FRONT_CONTENT ELEMENT', ->
+        new HtmlTag $2, null, $1
+    o 'TAG_FRONT_CONTENT ELEMENT Attributes', ->
+        new HtmlTag $2, $3, $1
   ]
   
   Attributes: [

@@ -1,12 +1,13 @@
                             
 {Lexer}   = require './Lexer'
 {parser}  = require './Parser'
-Zen       = require './Zen'
 {extend}  = require './Helper'
 
-# {ATTR_ABBR_LOOKUP} = require './AST'
+exports.Zen = require './Zen'
 
-exports.VERSION = '0.0.2'
+exports.VERSION = '0.0.5'
+
+# {ABBREVIATION_LOOKUP} = require './AST'
 
 exports.compile = compile = (code, options = {}) ->
   (parser.parse lexer.tokenize code).compile options
@@ -20,8 +21,6 @@ exports.nodes = (source, options) ->
   else
     parser.parse source
 
-exports.Zen = Zen
-
 lexer = new Lexer
 
 parser.lexer =
@@ -31,11 +30,11 @@ parser.lexer =
 
 parser.yy = require './AST'
     
-exports.attr_abbr = (abbrs) ->
-  extend ATTR_ABBR_LOOKUP, abbrs
+exports.abbreviation = (abbrs) ->
+  extend ABBREVIATION_LOOKUP, abbrs
     
 exports.remove_abbr = (abbrs) ->
-  delete ATTR_ABBR_LOOKUP[abbr] for abbr in abbrs
+  delete ABBREVIATION_LOOKUP[abbr] for abbr in abbrs
 
-exports.attr_abbrs = ->
-  ATTR_ABBR_LOOKUP
+exports.abbreviations = ->
+  ABBREVIATION_LOOKUP

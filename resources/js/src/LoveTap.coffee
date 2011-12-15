@@ -1,41 +1,14 @@
 require('coffee-script')
 
-# SmackLite
+# LoveTap
 # 
 # ~|> p#id.class.another-class Data |~
-  
 
-
-class SmackLite
+class LoveTap
   
   constructor: ->
     
   smack: (s) ->
-    
-    while matches = @TAG_REV.exec s
-      [ match, literal, tag, addl_tags ] = matches      
-    
-    matches = @TAG_REV.exec s
-    throw 'No Tag!' unless matches?
-
-    
-    
-    head = @smack_el tag
-    
-    el_match = /^<([a-zA-Z][a-zA-Z0-9]*)/.exec(head)
-    throw "Smack El error" unless el_match?
-    [match, el] = el_match
-    
-    cont = literal
-    foot = '</'+el+'>'
-    
-    console.log "matches: #{match}"
-    console.log "literal: #{literal}"
-    console.log "tag: #{tag}"
-    console.log "addl_tags: #{addl_tags}"
-    
-    console.log matches
-    
     
     
   
@@ -107,6 +80,6 @@ class SmackLite
           \s[|]~ # Close Tag
         $///m
 
-smk = new SmackLite
+smk = new LoveTap
 
 smk.test()

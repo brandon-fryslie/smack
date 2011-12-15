@@ -50,7 +50,7 @@ exports.ZenLexer = class ZenLexer
     match.length
   
   AttributeAbbreviation: ->
-    return 0 unless match = ClassAbbr.exec(@chunk) or match = AttrAbbr.exec(@chunk)
+    return 0 unless match = AttrAbbr.exec(@chunk) or ExtendedAttrAbbr.exec(@chunk) or PrimaryAttrAbbr.exec(@chunk)
     [match, key, value] = match
     @toke 'ATTRIBUTE', { key, value }
     match.length
@@ -78,7 +78,12 @@ exports.ZenLexer = class ZenLexer
   TagContent: ->
     return 0 unless match = TagContent.exec @chunk
     [match, content] = match
-    @toke 'TAG_CONTENT', trim content
+    
+    # Disambiguate
+    if @tag() is 'ZEN_OPERATOR'
+      @toke 'TAG_FRONT_CONTENT', trim content
+    else
+      @toke 'TAG_CONTENT', trim content
     match.length
     
   ZenAlias: ->
@@ -108,37 +113,19 @@ exports.ZenLexer = class ZenLexer
       throw "Fix your lexers"
 
 Element  = /^(?:h[1-6]|[a-zA-Z][a-zA-Z]*)/
-ClassAbbr = ///^(\.)([a-zA-Z][a-zA-Z0-9\-_]*)///
-AttrAbbr = ///^
-            (
-              [#.=?:+4]+|\([=*+]\)
-            | &[a-z\-]+:
-            )
-            ([a-zA-Z][a-zA-Z\-_]*)
-          ///
-AttrKey  = /^[a-zA-Z][a-zA-Z0-9\-_]*/
-AttrVal  = /^[a-zA-Z_ ][\-a-zA-Z0-9_ .]*/
-AttrList    = /^\|([\s\S]*?)\|/
-TagContent  = /^\'([\s\S]*?)\'/
 
-# ZenOperator = /^[>+<]/
-ZenOperator = /^[>+<!#]/
+# ID, Class, For, Type, data-
+# These only need alphanumerics, _ and -
+AttrAbbr = /^([#.]|::|&[a-z\-]+:)([a-zA-Z][a-zA-Z0-9\-_]*)/
 
-Tokens = ['(', ')']
+# Value (=), Target (+), Action (!)
+# These need a wider variety of characters
+ExtendedAttrAbbr = /^(\([4=+!a-z]\))((?:http:\/\/)?[^(\s:]+)/
 
-Whitespace = /^\s+/
-
-# Zen Populator is a JS object to use in your template
-# Can also reference some global and preset values (think Ruby)
-# It's a JS identifier with a $ at the beginning
-# Token matching regexes.
-
-# Snatched from CoffeeScript
-Identifier = /([$A-Za-z_\x7f-\uffff][$\w\x7f-\uffff]*)/
-ZenPopulator = ///^\$([$A-Za-z_\x7f-\uffff][$\.\w\x7f-\uffff]*)///
-ZenAlias = /^@[a-zA-Z0-9\-_\.]+/
-
-Number = ///
-  ^ 0x[\da-f]+ |              # hex
-  ^ \d*\.?\d+ (?:e[+-]?\d+)?  # decimal
-///i
+# : accesses the primary attribute for that element
+PrimaryAttrAbbr = /^(:)([^(\s]+)/
+AttrList        = /^\|([\s\S]*?)\|/
+TagContent      = /^[w]?\'([\s\S]*?)\'|\$([a-zA-Z0-9_-])+/
+ZenOperator     = /^[>+<!#]/
+Whitespace      = /^\s+/
+ZenAlias        = /^@[a-zA-Z0-9\-_\.]+/
