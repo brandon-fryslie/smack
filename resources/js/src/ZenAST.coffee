@@ -12,6 +12,13 @@ ABBREVIATION_LOOKUP =
   '='     : 'value'
   '!'     : 'action'
 
+RESOLVE_ABBREVIATION = (abbreviation, el) ->
+  return ABBREVIATION_LOOKUP[abbreviation] if abbreviation of ABBREVIATION_LOOKUP
+  return PRIMARY_ATTRIBUTES[el] if abbreviation is ':' and el of PRIMARY_ATTRIBUTES
+  match = /^&([a-z\-]+):/.exec abbreviation
+  return "data-#{match[1]}" if match?[1]?
+  abbreviation
+
 PRIMARY_ATTRIBUTES =
   a       : 'href'
   script  : 'src'
@@ -26,25 +33,29 @@ DEFAULT_ATTRIBUTES =
   link    : { rel   : 'stylesheet' }
   iframe  : { style : 'border:0;width:0px;height:0px' }
 
-ALIAS_BANK =
-  input_box: '> div.clearfix > div.input > label'
-
-
 GET_DEFAULT_ATTRIBUTES = (el) ->
   return extend {}, DEFAULT_ATTRIBUTES[el]
 
-RESOLVE_ABBREVIATION = (abbreviation, el) ->
-    
-  return ABBREVIATION_LOOKUP[abbreviation] if abbreviation of ABBREVIATION_LOOKUP
+ALIAS_BANK =
+  input_box: -> '> div.clearfix > div.input > label'
+  topbar: (args) ->
+    [brand] = args
+    """
+div.topbar
+  > div.fill
+    > div.container-fluid
+      > '#{brand}' a.brand:#
+"""
+RESOLVE_ALIAS = (identifier, args) ->
+  throw "Undefined alias: "+identifier unless identifier of ALIAS_BANK
+  args = (trim a for a in args.split ',')
+  ALIAS_BANK[identifier](args)
 
-  return PRIMARY_ATTRIBUTES[el] if abbreviation is ':' and el of PRIMARY_ATTRIBUTES
+VARIABLE_BANK = {}
 
-  match = /^&([a-z\-]+):/.exec abbreviation
-  
-  return "data-#{match[1]}" if match?[1]?
-  
-  abbreviation
-    
+RESOLVE_VARIABLE = (v) ->
+  VARIABLE_BANK[v]
+
 node_idx = 1
 
 Node = class Node
@@ -148,6 +159,9 @@ exports.HtmlTag = class HtmlTag extends Node
     "<#{@el}#{id_class_s}#{attr_s}>#{content_str}#{foot_str}"
     
 exports.ALIAS_BANK          = ALIAS_BANK
+exports.VARIABLE_BANK       = VARIABLE_BANK
 exports.DEFAULT_ATTRIBUTES  = DEFAULT_ATTRIBUTES
 exports.PRIMARY_ATTRIBUTES  = PRIMARY_ATTRIBUTES
 exports.ABBREVIATION_LOOKUP = ABBREVIATION_LOOKUP
+exports.RESOLVE_ALIAS       = RESOLVE_ALIAS
+exports.RESOLVE_VARIABLE    = RESOLVE_VARIABLE

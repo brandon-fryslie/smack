@@ -7,3 +7,4 @@ resources/js/*.js
 
 historical/
 *.js
+.tm_properties

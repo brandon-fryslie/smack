@@ -103,13 +103,22 @@ div
 """
   Zen.compile(text).should.equal('<div><p><span><i></i></span></p></div>')
 
-test 'Tag Content', ->
+test 'Tag Content String', ->
   text = """
 ul
   > li 'Blarney'
   + li 'Stone'
 """
   Zen.compile(text).should.equal('<ul><li>Blarney</li><li>Stone</li></ul>')
+
+test 'Tag Content Variable', ->
+  Zen.var blarney: 'Hey Yo', stone: "Let's get stoned!"
+  text = """
+ul
+  > li $blarney
+  + li $stone
+"""
+  Zen.compile(text).should.equal('<ul><li>Hey Yo</li><li>Let\'s get stoned!</li></ul>')
 
 test 'Default Attributes', ->
   Zen.compile('img input').should.equal('<img alt=""><input type="text">')
@@ -126,6 +135,9 @@ form:web.cgi""").should.equal("""<a href="google.com"></a><script src="yahoo.com
 
 test 'Shorthand Attributes', ->
   Zen.compile('meta(rel)start').should.equal('<meta rel="start">')
+
+test 'Zen Alias', ->
+  Zen.compile('@topbar(RV) # div.clearfix').should.equal('<div class="topbar"><div class="fill"><div class="container-fluid"><a class="brand" href="#">RV</a></div></div></div><div class="clearfix"></div>')
 
 
 console.log

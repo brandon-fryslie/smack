@@ -1,5 +1,8 @@
-{ZenLexer}  = require './ZenLexer'
-{parser}    = require './ZenParser'
+{ZenLexer}       = require './ZenLexer'
+{parser}         = require './ZenParser'
+{ALIAS_BANK}     = require './ZenAST'
+{VARIABLE_BANK}  = require './ZenAST'
+{extend}         = require './Helper'
 
 exports.compile = compile = (code, options = {}) ->
   (parser.parse lexer.tokenize code).compile options
@@ -27,18 +30,25 @@ parser.yy = require './ZenAST'
 
 # exports.populator = (pops) ->
 #   extend POPULATOR_BANK, pops
-#     
+#
 # exports.remove_populator = (pops) ->
 #   delete POPULATOR_BANK[pop] for pop in pops
-# 
+#
 # exports.populators = ->
 #   POPULATOR_BANK
   
-# exports.alias = (aliases) ->
-#   extend ALIAS_BANK, aliases
-# 
-# exports.remove_alias = (aliases) ->
-#   delete ALIAS_BANK[alias] for alias in aliases
-#     
-# exports.aliases = 
-#   ALIAS_BANK
+exports.alias = (aliases) ->
+  extend ALIAS_BANK, aliases
+
+exports.remove_alias = (aliases) ->
+  delete ALIAS_BANK[alias] for alias in aliases
+    
+exports.aliases = 
+  ALIAS_BANK
+  
+exports.var = (vars) ->
+  extend VARIABLE_BANK, vars
+
+exports.remove_var = (vars) ->
+  delete VARIABLE_BANK[v] for v of vars
+    

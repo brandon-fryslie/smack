@@ -1,5 +1,6 @@
 
 {last, trim} = require './Helper'
+{RESOLVE_ALIAS, RESOLVE_VARIABLE} = require './ZenAST'
 
 exports.ZenLexer = class ZenLexer
     
@@ -20,12 +21,12 @@ exports.ZenLexer = class ZenLexer
     i = 0
     while @chunk = @code.slice i
 
-      i +=  @Element() or
+      i +=  @ZenAlias() or
+            @Element() or
             @AttributeAbbreviation() or
             @AttributeList() or
             @ZenOperator() or
             @TagContent() or
-            @ZenAlias() or
             @Whitespace() or
             @LexerError()
                         
@@ -76,8 +77,11 @@ exports.ZenLexer = class ZenLexer
     match.length
 
   TagContent: ->
-    return 0 unless match = TagContent.exec @chunk
-    [match, content] = match
+    return 0 unless match = TagContentString.exec(@chunk) or TagContentVariable.exec(@chunk)
+    [match, op, content] = match
+    
+    if op is '$'
+      content = RESOLVE_VARIABLE(content)
     
     # Disambiguate
     if @tag() is 'ZEN_OPERATOR'
@@ -88,9 +92,11 @@ exports.ZenLexer = class ZenLexer
     
   ZenAlias: ->
     return 0 unless match = ZenAlias.exec @chunk
-    [match, tag, op] = match
-    @toke 'ZEN_ALIAS', match
-    match.length
+    [match, identifier, args] = match
+    # We deal with Aliases right here so they can join the token
+    # stream just like normal zen tags    
+    @code = @chunk = RESOLVE_ALIAS(identifier, args) + @code[match.length...]
+    0
   
   Token: ->
     return 0 unless @chunk[0] in Tokens
@@ -126,8 +132,9 @@ ExtendedAttrAbbr = /^\(([4=+!]|[a-z]+)\)((?:http:)?[^(\s:]+)/
 # : accesses the primary attribute for that element
 PrimaryAttrAbbr = /^(:)([^(\s]+)/
 
-AttrList        = /^\|([\s\S]*?)\|/
-TagContent      = /^[w]?\'([\s\S]*?)\'|\$([a-zA-Z0-9_-])+/
-ZenOperator     = /^[>+<!#]/
-Whitespace      = /^\s+/
-ZenAlias        = /^@[a-zA-Z0-9\-_\.]+/
+AttrList            = /^\|([\s\S]*?)\|/
+TagContentString    = /^(w?)\'([\s\S]*?)\'/
+TagContentVariable  = /^(\$)([a-zA-Z0-9_-]+)/
+ZenOperator         = /^[>+<!#]/
+Whitespace          = /^\s+/
+ZenAlias            = /^@([a-zA-Z0-9\-_\.]+)(?:\(([^)]*)\))?/

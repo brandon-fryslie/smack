@@ -3,7 +3,7 @@
 {parser}  = require './Parser'
 {extend}  = require './Helper'
 
-exports.Zen = require './Zen'
+exports.Zen = Zen = require './Zen'
 
 exports.VERSION = '0.0.5'
 
@@ -38,3 +38,7 @@ exports.remove_abbr = (abbrs) ->
 
 exports.abbreviations = ->
   ABBREVIATION_LOOKUP
+
+exports.var = Zen.var
+
+exports.remove_var = Zen.remove_var
