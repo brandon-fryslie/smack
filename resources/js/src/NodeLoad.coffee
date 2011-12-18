@@ -28,9 +28,9 @@ check_zen_parser = ->
 load_node = ->
   
   sources = [
-    'Helper', 
-    'ZenLexer', 'ZenAST', 'Zen', 
-    'Lexer', 'AST', 'Smack', 
+    'Helper', 'ZenConfig'
+    'ZenAST', 'ZenLexer', 'Zen'
+    'Lexer', 'AST', 'Smack'
     'Browser'
   ]
 

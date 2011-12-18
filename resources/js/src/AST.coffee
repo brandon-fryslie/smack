@@ -17,37 +17,49 @@ exports.Body = class Body extends Node
 exports.SmackBlock = class SmackBlock extends Node
 
   constructor: (front_op, @zentag, @contents, rear_op) ->
-    if front_op is ' '
-      @op = if rear_op is ' ' then '>' else rear_op.split ' '
+    @op = front_op
+    
+    if front_op is ' ' and rear_op is ' '
+      @op = [':']
     else
-      @op = front_op.split ' '
+      @op = []
+      @op.push op for op in front_op.split(/\s/) when op isnt ''
+      @op.push op for op in rear_op.split(/\s/) when op isnt ''
+      @op[@op.length-1] = last(@op).replace ':', '' if @op.length > 1
     
   compile: (o) ->
-    
-    leaves = @zentag.leaves()
+    leaves = @zentag.leaves empty: yes
         
     last_node_idx = leaves.length-1
     
+    # If there are no leaves, compile right now
     return @zentag.compile o if last_node_idx is -1
     
     placeholder_re = /~\|\$[0-9]+\:~/
     last_leaf_re   = ///~\|\$#{last_node_idx}\:~///
     populator_re = /~\|\$[a-zA-Z0-9_]+\:~/
 
-    content = (c.compile() for c in @contents).join ''
+    content = (c.compile(o) for c in @contents).join ''
                 
     switch @op[0]
       when 'split'
-        
-        content = content.split @op[1].replace('>','')
+        content = content.split @op[1]
         
         while content.length and leaves[last_node_idx]?
           leaves[last_node_idx].set_content trim content.pop()
           last_node_idx--
-        
-      when '>'
+      when 'wrap'
+        children = @zentag.tag.root.children
+        template = last children
+        for c in content.split @op[1]
+          children.push template.copy trim c        
+        children.splice 0, 1
+      when ':'
         leaves[last_node_idx].set_content content
-
+    
+    if o.indent
+      o.indent_lvl = 0
+    
     @zentag.compile o
     
 exports.ZenTag = class ZenTag extends Node
@@ -57,8 +69,8 @@ exports.ZenTag = class ZenTag extends Node
   constructor: (tag) ->
     @tag = Zen.nodes tag
 
-  leaves: ->
-    @tag.leaves()
+  leaves: (o) ->
+    @tag.leaves(o)
 
   compile: (o) ->
     @tag.compile o

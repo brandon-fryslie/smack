@@ -1,4 +1,4 @@
-~:>
+~::
   p#status.block-message |alt: Bla Bla Bla| > div.clear-fix
 ~
   Upload Successful!

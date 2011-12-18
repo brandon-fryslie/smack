@@ -20,6 +20,7 @@ BANNER = '''
 SWITCHES = [
   ['-b', '--build',           'build and output SmackCompiler (default: SmackCompiler.js)']
   ['-h', '--help',            'display this help message']
+  ['-i', '--interactive',     'run an interactive CoffeeScript REPL']
   ['-l', '--lex',             'print out the tokens that the lexer/rewriter produce']
   ['-n', '--nodes',           'print out the parse tree that the parser produces']
   ['-s', '--stdio',           'listen for and compile scripts over stdio']
@@ -27,28 +28,30 @@ SWITCHES = [
 ]
 
 exports.run = ->
-  opts = parseOptions()
-  return usage()                         if opts.help
-  return version()                       if opts.version
-  return build()                         if opts.build
-  return compileStdio(opts)
+  o = parseOptions()
+  return usage()                         if o.help
+  return require './repl'                if o.interactive
+  return version()                       if o.version
+  return build()                         if o.build
+  return compileStdio()                  if o.stdio
+  return require './repl'                unless o.sources?.length
 
 parseOptions = ->
   optionParser  = new optparse.OptionParser SWITCHES, BANNER
-  o = opts      = optionParser.parse process.argv.slice 2
+  o             = optionParser.parse process.argv.slice 2
   o.print       = true
   sources       = o.arguments
   o
 
 # Attach the appropriate listeners to compile scripts incoming over **stdin**,
 # and write them back to **stdout**.
-compileStdio = (opts) ->
+compileStdio = (o) ->
   code = ''
   stdin = process.openStdin()
   stdin.on 'data', (buffer) ->
     code += buffer.toString() if buffer
   stdin.on 'end', ->
-    compileScript code, opts
+    compileScript code, o
 
 # Compile a single source script, containing the given code, according to the
 # requested options. If evaluating the script directly sets `__filename`,

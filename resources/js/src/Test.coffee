@@ -31,10 +31,10 @@ test 'Smack Empty Tag', ->
   Smack.compile(text).should.equal('<div class="alert-message block-message info"></div>')
   
 test 'Smack Forward Tag', ->
-  text = "~:> p >> Yo bro! :~"
+  text = "~:: p >> Yo bro! :~"
   Smack.tokens(text).should.eql([
     [ 'OPENTAG', '~:', 1 ],
-    [ 'SMACK_OPERATOR', '>', 1 ],
+    [ 'SMACK_OPERATOR', ':', 1 ],
     [ 'ZENTAG', 'p', 1 ],
     [ 'MIDTAG', '>>', 1 ],
     [ 'LITERAL', 'Yo bro!', 1 ],
@@ -60,10 +60,10 @@ test 'Smack Reverse Tag', ->
 
 test 'Smack Split Tag', ->
   text = """
-~:split |> p + p + p + p >>
+~:split |: p + p + p + p >>
 Whoa | Bro | Low | Blow!
 :~
-~:split |> p > p > p > p >>
+~:split |: p > p > p > p >>
 Whoa Bro Low Blow!
 :~
 """
@@ -101,7 +101,7 @@ div.topbar
 
 test 'Smack Recursive', ->
   text = """
-~:> div >>
+~:: div >>
   ~: p b i :~
   ~: ul
     > li 'Stuff'
@@ -111,9 +111,22 @@ test 'Smack Recursive', ->
   :~
 :~
 """
-
-  nodes = Smack.nodes text
   Smack.compile(text).should.equal '<div><p></p><b></b><i></i><ul><li>Stuff</li><li>Goes</li><li>In</li><li>Here</li></ul></div>'
+
+test 'Smack Wrapper', ->
+  text = """
+~:: ul >>
+  ~:wrap |: li > a.btn >> Make | A | List | Real | Quick :~
+:~
+"""
+  Smack.compile(text).should.equal '<ul><li><a class="btn">Make</a></li><li><a class="btn">A</a></li><li><a class="btn">List</a></li><li><a class="btn">Real</a></li><li><a class="btn">Quick</a></li></ul>'
+
+  text = """
+~:: ul >>
+  ~: Make | A | List | Real | Quick << li > a.btn :wrap |:~
+:~
+"""
+  Smack.compile(text).should.equal '<ul><li><a class="btn">Make</a></li><li><a class="btn">A</a></li><li><a class="btn">List</a></li><li><a class="btn">Real</a></li><li><a class="btn">Quick</a></li></ul>'
 
 console.log
 console.log

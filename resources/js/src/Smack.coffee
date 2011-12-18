@@ -5,12 +5,15 @@
 
 exports.Zen = Zen = require './Zen'
 
-exports.VERSION = '0.0.5'
-
-# {ABBREVIATION_LOOKUP} = require './AST'
+exports.VERSION = '0.0.7'
 
 exports.compile = compile = (code, options = {}) ->
-  (parser.parse lexer.tokenize code).compile options
+  try
+    (parser.parse lexer.tokenize code).compile options
+  catch e
+    console.log 'tokens',lexer.tokenize code
+    console.log e.message || e
+    code
 
 exports.tokens = (code, options) ->
   lexer.tokenize code, options

@@ -8,7 +8,6 @@ return unless window?
 
 # Compile all the embedded smack tags
 compileEmbedded = ->
-  console.log 'compiling embedded'
   scripts = document.getElementsByTagName 'script'
   for s in scripts when s.type is 'text/smack'
     smack_el = document.createElement('div')

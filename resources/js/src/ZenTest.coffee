@@ -1,5 +1,4 @@
 
-
 # fs = require 'fs'
 # path = require 'path'
 
@@ -112,7 +111,7 @@ ul
   Zen.compile(text).should.equal('<ul><li>Blarney</li><li>Stone</li></ul>')
 
 test 'Tag Content Variable', ->
-  Zen.var blarney: 'Hey Yo', stone: "Let's get stoned!"
+  Zen.VARIABLE.set blarney: 'Hey Yo', stone: "Let's get stoned!"
   text = """
 ul
   > li $blarney
@@ -138,6 +137,9 @@ test 'Shorthand Attributes', ->
 
 test 'Zen Alias', ->
   Zen.compile('@topbar(RV) # div.clearfix').should.equal('<div class="topbar"><div class="fill"><div class="container-fluid"><a class="brand" href="#">RV</a></div></div></div><div class="clearfix"></div>')
+
+test 'Zen Indent', ->
+  Zen.compile('@topbar(RV) # div.clearfix').should.equal("""<div class="topbar"><div class="fill"><div class="container-fluid"><a class="brand" href="#">RV</a></div></div></div><div class="clearfix"></div>""")
 
 
 console.log

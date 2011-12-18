@@ -15,8 +15,11 @@ exports.visit = visit = (tree, { preorder, postorder, leaf, inorder }) ->
     leaf?(tree)
   postorder?(tree)
 
-exports.indent = indent = (n) ->
-  new Array(n+1).join '  '
+exports.count = (s, to_find = /\n/) ->
+  s.match(to_find)?.length? or 0
+
+exports.indent = indent = (n, s = '  ') ->
+  new Array(n+1).join s
 
 exports.last = (array, back) ->
   array[array.length - (back or 0) - 1]

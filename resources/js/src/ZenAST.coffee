@@ -1,60 +1,7 @@
 
-{trim, visit, flatten, print_tree, last, extend} = require './Helper'
+{trim, visit, flatten, print_tree, last, extend, indent} = require './Helper'
 
-SINGLETONS = ['area', 'base', 'br', 'col', 'command', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source']
-
-ABBREVIATION_LOOKUP =
-  '#'     : 'id'
-  '.'     : 'class'
-  '::'    : 'type'
-  '4'     : 'for'
-  '+'     : 'target'
-  '='     : 'value'
-  '!'     : 'action'
-
-RESOLVE_ABBREVIATION = (abbreviation, el) ->
-  return ABBREVIATION_LOOKUP[abbreviation] if abbreviation of ABBREVIATION_LOOKUP
-  return PRIMARY_ATTRIBUTES[el] if abbreviation is ':' and el of PRIMARY_ATTRIBUTES
-  match = /^&([a-z\-]+):/.exec abbreviation
-  return "data-#{match[1]}" if match?[1]?
-  abbreviation
-
-PRIMARY_ATTRIBUTES =
-  a       : 'href'
-  script  : 'src'
-  img     : 'src'
-  link    : 'href'
-  input   : 'value'
-  form    : 'action'
-
-DEFAULT_ATTRIBUTES =
-  img     : { alt   : '' }
-  input   : { type  : 'text' }
-  link    : { rel   : 'stylesheet' }
-  iframe  : { style : 'border:0;width:0px;height:0px' }
-
-GET_DEFAULT_ATTRIBUTES = (el) ->
-  return extend {}, DEFAULT_ATTRIBUTES[el]
-
-ALIAS_BANK =
-  input_box: -> '> div.clearfix > div.input > label'
-  topbar: (args) ->
-    [brand] = args
-    """
-div.topbar
-  > div.fill
-    > div.container-fluid
-      > '#{brand}' a.brand:#
-"""
-RESOLVE_ALIAS = (identifier, args) ->
-  throw "Undefined alias: "+identifier unless identifier of ALIAS_BANK
-  args = (trim a for a in args.split ',')
-  ALIAS_BANK[identifier](args)
-
-VARIABLE_BANK = {}
-
-RESOLVE_VARIABLE = (v) ->
-  VARIABLE_BANK[v]
+{IS_SINGLETON, ATTRIBUTE, ABBREVIATION} = require './ZenConfig'
 
 node_idx = 1
 
@@ -73,7 +20,6 @@ exports.ZenTag = class ZenTag extends Node
   # Here:
   # Get entire zen tag
   # compile it
-  # zen parser will replace @aliases and handle that
   # get back a tree of html nodes:
   #
   constructor: (tag) ->
@@ -107,12 +53,13 @@ exports.ZenTag = class ZenTag extends Node
         when '+'
           'noop'
         else
+          tag.parent = current
           current.children.push tag
     @root = root
     
-  leaves: ->
+  leaves: (o) ->
     @treeify() unless @root?
-    flatten (t.leaves() for t in @root.children)
+    flatten (t.leaves(o) for t in @root.children)
     
   compile: (o = {}) ->
     @treeify() unless @root?
@@ -121,47 +68,56 @@ exports.ZenTag = class ZenTag extends Node
 exports.HtmlTag = class HtmlTag extends Node
   
   constructor: (@el, @attributes = [], @content = '') ->
-    @children = [] unless @el in SINGLETONS
+    @is_singleton = IS_SINGLETON @el
+    @children = [] unless @is_singlton
+  
+  copy: (content) ->
+    tag = new HtmlTag @el, ({ key, value } for { key, value } in @attributes)
+    tag.children.push c.copy content for c in @children unless @is_leaf() or @is_singlton
+    tag.set_content content
   
   set_content: (s) ->
-    @content = s
+    return @ if @is_singlton
+    (@content = s; return @) if @is_leaf      
+    c.set_content s for c in @children
+    @
+
+  is_leaf: ->
+    @children.length is 0
   
-  leaves: ->
-    return this if @children.length is 0 and @content is ''
-    c.leaves() for c in @children if @children?
+  leaves: (o) ->
+    if o.empty
+      return this if @is_leaf() and @content is ''
+    else
+      return this if @is_leaf()  
+    c.leaves(o) for c in @children if @children?
     
   compile: (o) ->
-    attrs = GET_DEFAULT_ATTRIBUTES @el
+    attrs = ATTRIBUTE.defaults.resolve @el
     
     for { key, value } in @attributes
-      key = RESOLVE_ABBREVIATION(key, @el)
+      key = ABBREVIATION.resolve key, @el
       if attrs[key]? and key is 'class'
         attrs['class'] += ' '+value
       else
         attrs[key] = value
-    
+        
     id_class_s = ''
     id_class_s += " id=\"#{attrs.id}\"" if attrs.id?
     id_class_s += " class=\"#{attrs.class}\"" if attrs.class?
           
     attr_s     = (' '+k+'="'+v+'"' for k, v of attrs when k isnt 'id' and k isnt 'class').join ''
-    foot_str   = if @el in SINGLETONS then '' else '</'+@el+'>'
+    foot_str   = if @is_singleton then '' else '</'+@el+'>'
     
     if @children?.length
+      o.indent_lvl += 1 if o.indent
       content_str = (c.compile(o) for c in @children if @children?).join ''
-    else if @populator?
-      content_str = @populator
     else if o.leaves?
       content_str = "~:$#{node_idx++}:~"
     else
       content_str = @content
     
-    "<#{@el}#{id_class_s}#{attr_s}>#{content_str}#{foot_str}"
+    dent = if o.indent then indent(o.indent_lvl) else ''
+    newline = if o.indent then "\n" else ''
     
-exports.ALIAS_BANK          = ALIAS_BANK
-exports.VARIABLE_BANK       = VARIABLE_BANK
-exports.DEFAULT_ATTRIBUTES  = DEFAULT_ATTRIBUTES
-exports.PRIMARY_ATTRIBUTES  = PRIMARY_ATTRIBUTES
-exports.ABBREVIATION_LOOKUP = ABBREVIATION_LOOKUP
-exports.RESOLVE_ALIAS       = RESOLVE_ALIAS
-exports.RESOLVE_VARIABLE    = RESOLVE_VARIABLE
+    "#{dent}<#{@el}#{id_class_s}#{attr_s}>#{newline}#{content_str}#{foot_str}#{newline}"

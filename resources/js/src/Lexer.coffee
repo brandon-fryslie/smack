@@ -1,5 +1,5 @@
 
-{peek, trim} = require './Helper'
+{peek, trim, count} = require './Helper'
 
 exports.Lexer = class Lexer
   
@@ -17,17 +17,16 @@ exports.Lexer = class Lexer
     @line = 0
     @tokens = []
     @configuration_stack = []
-    
+        
     i = 0
     while @chunk = @code.slice i
-
       i +=  @OpenTag() or
             @Midtag() or
             @CloseTag() or
             @ZenTag() or
             @Literal() or
             @Whitespace() or
-            @LexerError()
+            @Unknown()
     return @tokens
 
   toke: (tag, value) ->
@@ -53,23 +52,21 @@ exports.Lexer = class Lexer
     return 0 unless match = OpenTagRE.exec @chunk
     [match, tag, op] = match
     
-    @line++
-    
     @toke 'OPENTAG', tag
-    
     @toke 'SMACK_OPERATOR', op
-    
-    throw 'Lexer: Missing Smack Operator (Open)' if @tag() isnt 'SMACK_OPERATOR'
+
+    @line += count op
+    chunk = @chunk[match.length...]
     
     if not /^\s$/.test @value()
       type = 'REGULAR'
-    else if (CloseTagTest.exec(@chunk)?.index ? @chunk.length) < (MidtagTest.exec(@chunk)?.index ? @chunk.length)    
+    else if (CloseTagTest.exec(chunk)?.index ? chunk.length) < (MidtagTest.exec(chunk)?.index ? chunk.length)    
       type = 'EMPTY'
     else
       type = 'REVERSE'
-    
+
     @configuration_stack.push type: type
-    
+
     match.length
   
   Midtag: ->
@@ -84,11 +81,9 @@ exports.Lexer = class Lexer
     [match, op, tag] = match
     
     @toke 'SMACK_OPERATOR', op
-      
     @toke 'CLOSETAG', tag
     
-    @line--
-    
+    @line += count op
     @configuration_stack.pop()
     
     match.length
@@ -106,7 +101,6 @@ exports.Lexer = class Lexer
       close_idx = CloseTagTest.exec(@chunk)?.index
       
     throw {msg: "No closing MIDTAG or CLOSE_TAG for ZENTAG", chunk: @chunk, tokens: @tokens} unless close_idx?
-    
     zentag = @chunk[0...close_idx]
     
     @toke 'ZENTAG', trim(zentag)
@@ -136,12 +130,12 @@ exports.Lexer = class Lexer
     # Is this a nested tag?
     end_idx = open_tag_idx if open_tag_idx < end_idx 
     
-    unless end_idx?
-      console.log "Warning, inside tag and no midtag/closetag found..." 
-      console.log "@tag(): ", @tag()
-      console.log "@value(): ", @value()
-      console.log "@type(): ", @type()
-      console.log "@chunk(): ", @chunk
+    # unless end_idx?
+    #   console.log "Warning, inside tag and no midtag/closetag found..." 
+    #   console.log "@tag(): ", @tag()
+    #   console.log "@value(): ", @value()
+    #   console.log "@type(): ", @type()
+    #   console.log "@chunk(): ", @chunk
 
     
     literal = @chunk[0...end_idx]
@@ -161,24 +155,18 @@ exports.Lexer = class Lexer
     return 0 unless match = Whitespace.exec @chunk
     return match[0].length
   
-  LexerError: ->
-    try
-      throw null
-    catch e
-      console.log '--- SmackLexer Error ---'
-      console.log "Not a token: #{@chunk}"
-      console.log '@tokens'
-      console.log @tokens
-      console.log @check_status()
-      throw "Fix your lexers"
-    tok = @chunk[0]
-    @toke 'TOKEN', tok
-    tok.length
+  Unknown: ->
+    if @tag() is 'UNKNOWN'
+      [tag, value] = @tokens.pop()
+      @toke value+@chunk[0]
+      return value.length+1
+    @toke @chunk[0]
+    1
 
-OpenTagRE    = /^(~:)(\s|[^<>]*?>)/
-OpenTagTest  =  /(~:)(\s|[^<>]*?>)/
-CloseTagRE   = /^(\s|<.*?)(:~)/
-CloseTagTest =  /(\s|<.*?)(:~)/
+OpenTagRE    = /^(~:)(\s|[^:]*?:)/
+OpenTagTest  =  /(~:)(\s|[^:]*?:)/
+CloseTagRE   = /^(\s|:[^:]*?)(:~)/
+CloseTagTest =  /(\s|:[^:]*?)(:~)/
 
 MidtagRE   = /^(>>|<<)/
 MidtagTest =  /(>>|<<)/

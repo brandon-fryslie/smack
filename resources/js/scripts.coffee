@@ -4,17 +4,27 @@ Smack = this.Smack
 $ ->
   $('#smack_input').val """
     ~: Hi there! ~p :~
-    ~:> p#status.block-message |alt:Bla Bla Bla| > div.clear-fix~ You have Success!!! :~
+    ~:: p#status.block-message |alt:Bla Bla Bla| > div.clear-fix~ You have Success!!! :~
     ~: You have Success!!! ~p#status.block-message |alt:Bla Bla Bla| > div.clear-fix :~
   """
   
   
   $("#smack_input").val """
+~:: ul >>
+  ~:wrap |: li > a.btn >> Make | A | List | Real | Quick :~
+:~
+
+~:: ul >>
+  ~: Make | A | List | Real | Quick << li > a.btn <
+
+  ~:wrap |: li > a.btn >> Make | A | List | Real | Quick :~
+:~
+
 ~: img input :~
   
 ~: div.alert-message.block-message.info :~
 
-~:> p >> Yo bro! :~
+~:: p >> Yo bro! :~
 ~: Yo bro! << p :~
 
 ~:
@@ -27,13 +37,13 @@ div.topbar
         + li.dropdown |data-dropdown: dropdown|
           > 'Documentation' a.dropdown-toggle |href: #doc-tab|
           + ul.dropdown-menu
-            > 'Gene Annotation' li > a+doc-iframe |href: resources/docs/1_gene_annotation.html| <
-            + 'HPC' li > a+doc-iframe |href: resources/docs/2_HPC.html| <
-            + 'Blast' li > a+doc-iframe |href: resources/docs/3_Blast.html| <
-            + 'Newbler' li > a+doc-iframe |href: resources/docs/4_Newbler.html| <
+            > 'Gene Annotation' li > a(+)doc-iframe |href: resources/docs/1_gene_annotation.html| <
+            + 'HPC' li > a(+)doc-iframe |href: resources/docs/2_HPC.html| <
+            + 'Blast' li > a(+)doc-iframe |href: resources/docs/3_Blast.html| <
+            + 'Newbler' li > a(+)doc-iframe |href: resources/docs/4_Newbler.html| <
 :~
 
-~:> div >>
+~:: div >>
   ~: p b i :~
   ~: ul
     > li 'Stuff'

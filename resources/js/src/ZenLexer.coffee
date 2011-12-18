@@ -1,6 +1,6 @@
 
 {last, trim} = require './Helper'
-{RESOLVE_ALIAS, RESOLVE_VARIABLE} = require './ZenAST'
+{VARIABLE, ALIAS} = require './ZenConfig'
 
 exports.ZenLexer = class ZenLexer
     
@@ -28,7 +28,7 @@ exports.ZenLexer = class ZenLexer
             @ZenOperator() or
             @TagContent() or
             @Whitespace() or
-            @LexerError()
+            @Unknown()
                         
     return @tokens
 
@@ -81,9 +81,9 @@ exports.ZenLexer = class ZenLexer
     [match, op, content] = match
     
     if op is '$'
-      content = RESOLVE_VARIABLE(content)
+      content = VARIABLE.resolve(content)
     
-    # Disambiguate
+    # Disambiguate for the grammar
     if @tag() is 'ZEN_OPERATOR'
       @toke 'TAG_FRONT_CONTENT', trim content
     else
@@ -93,9 +93,10 @@ exports.ZenLexer = class ZenLexer
   ZenAlias: ->
     return 0 unless match = ZenAlias.exec @chunk
     [match, identifier, args] = match
+    
     # We deal with Aliases right here so they can join the token
-    # stream just like normal zen tags    
-    @code = @chunk = RESOLVE_ALIAS(identifier, args) + @code[match.length...]
+    # stream just like normal zen tags
+    @code = @chunk = ALIAS.resolve(identifier, args) + @code[match.length...]
     0
   
   Token: ->
@@ -107,16 +108,14 @@ exports.ZenLexer = class ZenLexer
     return 0 unless match = Whitespace.exec @chunk
     return match.length
   
-  LexerError: ->
-    try
-      throw null
-    catch e
-      console.log '--- ZenLexer Error ---'
-      console.log "Not a token: #{@chunk}"
-      console.log '@tokens'
-      console.log @tokens
-      console.log @check_status()
-      throw "Fix your lexers"
+  Unknown: ->
+    if @tag() is 'UNKNOWN'
+      [tag, value] = @tokens.pop()
+      @toke value+@chunk[0]
+      return value.length+1
+    @toke @chunk[0]
+    1
+  
 
 Element  = /^(?:h[1-6]|[a-zA-Z][a-zA-Z]*)/
 
